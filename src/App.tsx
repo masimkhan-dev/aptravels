@@ -1,0 +1,60 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPackages from "./pages/admin/AdminPackages";
+import AdminServices from "./pages/admin/AdminServices";
+import AdminInquiries from "./pages/admin/AdminInquiries";
+import AdminGallery from "./pages/admin/AdminGallery";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminBookingDetail from "./pages/admin/AdminBookingDetail";
+import AdminStaff from "./pages/admin/AdminStaff";
+import { ProtectedRoute } from "./components/admin/ProtectedRoute";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              {/* Admin-only routes */}
+              <Route path="dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><AdminStaff /></ProtectedRoute>} />
+
+              {/* Admin + Manager routes */}
+              <Route path="packages" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminPackages /></ProtectedRoute>} />
+              <Route path="services" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminServices /></ProtectedRoute>} />
+              <Route path="gallery" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminGallery /></ProtectedRoute>} />
+
+              {/* Admin + Manager + Sales routes */}
+              <Route path="inquiries" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales']}><AdminInquiries /></ProtectedRoute>} />
+              <Route path="customers" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales']}><AdminCustomers /></ProtectedRoute>} />
+
+              {/* All roles can access bookings */}
+              <Route path="bookings" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales', 'ops']}><AdminBookings /></ProtectedRoute>} />
+              <Route path="bookings/:id" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales', 'ops']}><AdminBookingDetail /></ProtectedRoute>} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
+
+export default App;

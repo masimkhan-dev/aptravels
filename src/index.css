@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 213 50% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 213 50% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 50% 15%;
+
+    --primary: 218 75% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 213 60% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 213 20% 45%;
+
+    --accent: 43 78% 46%;
+    --accent-foreground: 213 60% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 30% 90%;
+    --input: 214 30% 90%;
+    --ring: 218 75% 36%;
+
+    --radius: 0.75rem;
+
+    --navy: 213 60% 15%;
+    --navy-light: 213 50% 22%;
+    --blue: 218 75% 36%;
+    --blue-light: 218 70% 50%;
+    --gold: 43 78% 46%;
+    --gold-light: 43 70% 60%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(213 60% 15%) 0%, hsl(218 75% 36%) 50%, hsl(213 50% 22%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(43 78% 46%) 0%, hsl(43 70% 60%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
+
+    --shadow-card: 0 4px 20px -4px hsl(213 60% 15% / 0.08);
+    --shadow-card-hover: 0 12px 40px -8px hsl(213 60% 15% / 0.15);
+    --shadow-gold: 0 4px 20px -4px hsl(43 78% 46% / 0.4);
+
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+
+    --sidebar-background: 213 60% 15%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 43 78% 46%;
+    --sidebar-primary-foreground: 213 60% 10%;
+    --sidebar-accent: 213 50% 22%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 213 40% 25%;
+    --sidebar-ring: 43 78% 46%;
+  }
+
+  .dark {
+    --background: 213 60% 8%;
+    --foreground: 210 20% 95%;
+    --card: 213 50% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 213 50% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 218 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 40% 20%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 213 40% 18%;
+    --muted-foreground: 210 15% 60%;
+    --accent: 43 78% 46%;
+    --accent-foreground: 213 60% 10%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 213 30% 22%;
+    --input: 213 30% 22%;
+    --ring: 218 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-hero-gradient {
+    background: var(--gradient-hero);
+  }
+  .bg-gold-gradient {
+    background: var(--gradient-gold);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+}
