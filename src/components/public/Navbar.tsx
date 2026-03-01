@@ -25,8 +25,23 @@ export default function Navbar() {
 
   const scrollTo = (href: string) => {
     setMobileOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: "smooth" });
+
+    // Slight delay to allow the mobile drawer animation to start/finish
+    setTimeout(() => {
+      const el = document.querySelector(href);
+      if (el) {
+        const offset = 80; // height of navbar
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = el.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    }, 100);
   };
 
   return (
@@ -77,7 +92,8 @@ export default function Navbar() {
         {/* Mobile toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden text-primary-foreground"
+          className="md:hidden text-primary-foreground p-2"
+          aria-label="Toggle Menu"
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -90,19 +106,34 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-secondary/95 backdrop-blur-md border-t border-primary-foreground/10"
+            className="md:hidden bg-secondary/95 backdrop-blur-md border-t border-primary-foreground/10 overflow-hidden"
           >
-            <div className="container mx-auto px-4 py-4 flex flex-col gap-3">
+            <div className="container mx-auto px-4 py-6 flex flex-col gap-2">
               {navLinks.map((l) => (
                 <button
                   key={l.href}
                   onClick={() => scrollTo(l.href)}
-                  className="flex items-center gap-3 text-left text-primary-foreground/80 hover:text-gold py-2.5 px-4 rounded-lg hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-4 text-left text-primary-foreground/90 hover:text-gold py-3 px-4 rounded-xl hover:bg-white/5 transition-all active:scale-[0.98]"
                 >
-                  <l.icon className="w-5 h-5 opacity-70" />
-                  <span className="font-medium text-sm">{l.label}</span>
+                  <div className="w-8 h-8 rounded-lg bg-primary-foreground/5 flex items-center justify-center">
+                    <l.icon className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold text-sm">{l.label}</span>
                 </button>
               ))}
+
+              <div className="mt-4 pt-4 border-t border-primary-foreground/5">
+                <Link
+                  to="/admin/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-4 text-left text-gold py-3 px-4 rounded-xl bg-gold/5 transition-all active:scale-[0.98]"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <span className="font-bold text-sm uppercase tracking-wide">Staff Dashboard</span>
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
