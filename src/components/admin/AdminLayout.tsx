@@ -96,11 +96,11 @@ export default function AdminLayout() {
       >
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gold-gradient flex items-center justify-center">
-              <Plane className="w-5 h-5 text-secondary" />
+            <div className="w-12 h-12 rounded-full overflow-hidden border-[1.5px] border-gold/50 flex items-center justify-center bg-transparent shadow-gold hover:scale-105 transition-transform relative">
+              <img src="/logo.jpeg" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
             </div>
             <div>
-              <p className="font-display text-sm font-bold leading-tight">Admin Panel</p>
+              <p className="font-display text-sm font-bold leading-tight uppercase text-gold">Akbar Pura Travels</p>
               <p className="text-xs text-secondary-foreground/60 uppercase tracking-widest font-black">{role || 'Staff'}</p>
             </div>
           </div>

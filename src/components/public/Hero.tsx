@@ -33,8 +33,8 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
           className="flex items-center justify-center gap-3 mb-6"
         >
-          <div className="w-14 h-14 rounded-full bg-gold-gradient flex items-center justify-center shadow-gold animate-float">
-            <Plane className="w-7 h-7 text-secondary" />
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center bg-transparent border-[3px] border-gold/50 shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-float overflow-hidden relative">
+            <img src="/logo.jpeg" alt="Akbar Pura Travel Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply brightness-110 contrast-125 scale-110" />
           </div>
         </motion.div>
 
@@ -55,7 +55,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.35 }}
         >
           <p className="font-body text-xl md:text-2xl text-gold" dir="rtl">
-            حج، عمرہ، ٹکٹس اور ویزا سروسز
+            حج، عمرہ، ٹکٹس، ورک اور سٹوڈنٹ ویزا سروسز
           </p>
         </motion.div>
 

@@ -137,57 +137,56 @@ export default function AdminInquiries() {
               <p className="text-center text-muted-foreground py-12 text-sm">No inquiries found.</p>
             )}
             {inquiries.map((inq) => (
-              <div key={inq.id} className="relative">
-                <button
-                  onClick={() => openView(inq)}
-                  className={`w-full text-left p-4 hover:bg-muted/50 transition-colors ${viewing?.id === inq.id ? "bg-muted/50" : ""
-                    } ${!inq.is_read ? "border-l-4 border-l-gold" : ""}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm font-medium ${!inq.is_read ? "text-card-foreground" : "text-muted-foreground"}`}>
-                      {inq.name}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {!inq.is_read ? (
-                        <Mail className="w-3.5 h-3.5 text-gold" />
-                      ) : (
-                        <MailOpen className="w-3.5 h-3.5 text-muted-foreground/50" />
-                      )}
+              <div
+                key={inq.id}
+                onClick={() => openView(inq)}
+                className={`group cursor-pointer w-full text-left p-4 hover:bg-muted/50 transition-colors ${viewing?.id === inq.id ? "bg-muted/50" : ""
+                  } ${!inq.is_read ? "border-l-4 border-l-gold" : ""}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-sm font-medium ${!inq.is_read ? "text-card-foreground" : "text-muted-foreground"}`}>
+                    {inq.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {!inq.is_read ? (
+                      <Mail className="w-3.5 h-3.5 text-gold" />
+                    ) : (
+                      <MailOpen className="w-3.5 h-3.5 text-muted-foreground/50" />
+                    )}
 
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Inquiry?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the inquiry from {inq.name}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(inq.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Inquiry?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the inquiry from {inq.name}.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(inq.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{inq.message}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">
-                    {new Date(inq.created_at).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </button>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-1">{inq.message}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  {new Date(inq.created_at).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
               </div>
             ))}
           </div>

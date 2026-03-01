@@ -63,7 +63,7 @@ export default function AboutSection() {
                             travelers, and families from Nowshera and across KPK for years.
                             Based in the heart of Akbar Pura, we are a trusted name for Hajj
                             &amp; Umrah packages, international airline ticketing, and complete
-                            visa processing services.
+                            visa processing services including Work, Student & Visit Visas.
                         </p>
                         <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
                             Under the leadership of{" "}

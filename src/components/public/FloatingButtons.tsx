@@ -51,9 +51,21 @@ export default function FloatingButtons() {
         rel="noopener noreferrer"
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="w-14 h-14 rounded-full bg-[#25D366] text-primary-foreground shadow-lg flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#25D366] text-primary-foreground shadow-lg flex items-center justify-center group relative"
       >
         <MessageCircle className="w-6 h-6" />
+        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black/80 text-white text-xs whitespace-nowrap rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Chat with us</span>
+      </motion.a>
+
+      <motion.a
+        href="https://whatsapp.com/channel/0029Vb6aNCv2UPB9K7mDCP3k"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-14 h-14 rounded-full bg-white border-2 border-[#25D366] text-[#25D366] shadow-lg flex items-center justify-center group relative hover:bg-[#25D366] hover:text-white transition-all overflow-hidden"
+      >
+        <MessageCircle className="w-6 h-6 mr-[-5px]" />
+        <span className="text-[10px] font-bold ml-1">New</span>
+        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black/80 text-white text-[11px] font-semibold whitespace-nowrap rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Follow our Channel</span>
       </motion.a>
     </div>
   );

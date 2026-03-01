@@ -72,9 +72,11 @@ export default function AdminLogin() {
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="w-16 h-16 rounded-2xl bg-white shadow-xl flex items-center justify-center mx-auto mb-6 border border-border/50"
+            className=""
           >
-            <ShieldCheck className="w-8 h-8 text-gold" />
+            <div className="w-24 h-24 rounded-full bg-transparent shadow-xl flex items-center justify-center mx-auto mb-6 border-[3px] border-gold/50 hover:scale-105 transition-transform overflow-hidden relative">
+              <img src="/logo.jpeg" alt="Akbar Pura Travel Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
+            </div>
           </motion.div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Staff Portal</h1>
           <p className="text-muted-foreground text-sm mt-1"> Secure Access Interface </p>

@@ -50,11 +50,27 @@ export default function AdminCustomers() {
 
     const fetchCustomerBookings = async (customerId: string) => {
         setBookingsLoading(true);
+
+        // First get booking IDs for this customer since the view doesn't have customer_id
+        const { data: bookings } = await supabase
+            .from("bookings")
+            .select("id")
+            .eq("customer_id", customerId);
+
+        const bookingIds = bookings?.map(b => b.id) || [];
+
+        if (bookingIds.length === 0) {
+            setCustomerBookings([]);
+            setBookingsLoading(false);
+            return;
+        }
+
         const { data } = await (supabase
             .from("booking_ledger_view" as any) as any)
             .select("booking_id, invoice_no, total_price, total_paid, balance_due, status, booking_type")
-            .eq("customer_id", customerId)
+            .in("booking_id", bookingIds)
             .order("invoice_no", { ascending: false });
+
         setCustomerBookings((data as any) || []);
         setBookingsLoading(false);
     };

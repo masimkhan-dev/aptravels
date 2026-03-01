@@ -55,8 +55,8 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-16 md:h-20">
         <button onClick={() => scrollTo("#home")} className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-gold-gradient flex items-center justify-center">
-            <Plane className="w-5 h-5 text-secondary" />
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full flex shrink-0 items-center justify-center bg-transparent border-[1.5px] border-gold/50 shadow-sm overflow-hidden relative">
+            <img src="/logo.jpeg" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
           </div>
           <div className="hidden sm:block">
             <p className="font-display text-sm font-bold text-primary-foreground leading-tight">
