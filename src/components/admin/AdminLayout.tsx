@@ -91,7 +91,7 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-muted flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-secondary text-secondary-foreground transform transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-secondary text-secondary-foreground transform transition-transform duration-200 no-print ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           } lg:translate-x-0 lg:static lg:z-auto`}
       >
         <div className="p-6 border-b border-sidebar-border">
@@ -148,7 +148,7 @@ export default function AdminLayout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-card border-b border-border px-4 py-3 flex items-center gap-4 lg:px-6">
+        <header className="bg-card border-b border-border px-4 py-3 flex items-center gap-4 lg:px-6 no-print">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-foreground">
             <Menu className="w-6 h-6" />
           </button>
