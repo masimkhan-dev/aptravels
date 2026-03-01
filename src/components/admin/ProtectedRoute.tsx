@@ -23,7 +23,11 @@ export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) 
         );
     }
 
-    if (!role || !allowedRoles.includes(role)) {
+    if (!role) {
+        return <Navigate to="/admin/login" replace />;
+    }
+
+    if (!allowedRoles.includes(role)) {
         return <Navigate to="/admin/bookings" replace />;
     }
 

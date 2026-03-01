@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plane, Loader2, Eye, EyeOff, ShieldCheck, Lock } from "lucide-react";
+import { useRole } from "@/hooks/useRole";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminLogin() {
@@ -11,6 +13,12 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { role, loading: roleLoading } = useRole();
+
+  if (!roleLoading && role) {
+    const target = (role === 'admin' || role === 'manager') ? "/admin/dashboard" : "/admin/bookings";
+    return <Navigate to={target} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
