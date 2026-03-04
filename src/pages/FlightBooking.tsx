@@ -89,7 +89,7 @@ const FlightBooking = () => {
                                 <a href="#booking-steps" className="btn-gold px-8 py-4 rounded-xl flex items-center gap-2">
                                     Learn How to Book <ChevronRight className="w-4 h-4" />
                                 </a>
-                                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-xl border border-border font-bold hover:bg-muted transition-all">
+                                <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe International Flight ki details chahiye.")}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-xl border border-border font-bold hover:bg-muted transition-all">
                                     Contact Specialist
                                 </a>
                             </div>
@@ -180,7 +180,7 @@ const FlightBooking = () => {
                                         <div className="h-4 w-1/2 bg-border/50 rounded animate-pulse" />
                                     </div>
                                     <div className="p-6 rounded-2xl bg-gold-gradient text-secondary font-bold text-center shadow-gold hover:opacity-95 transition-opacity cursor-pointer">
-                                        <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                        <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe flight booking ke liye help chahiye.")}`} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
                                             Contact on WhatsApp to Book
                                         </a>
                                     </div>

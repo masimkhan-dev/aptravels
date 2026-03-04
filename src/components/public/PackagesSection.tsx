@@ -102,7 +102,7 @@ export default function PackagesSection() {
                       </p>
                     </div>
                     <a
-                      href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi, I'm interested in the ${pkg.title} package.`)}`}
+                      href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Assalam-o-Alaikum Akbar Pura Travels! Mujhe ${pkg.title} package ki details chahiye.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-gold px-5 py-2.5 rounded-xl text-sm"
