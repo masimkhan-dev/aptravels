@@ -83,7 +83,7 @@ export default function AdminLogin() {
             className=""
           >
             <div className="w-24 h-24 rounded-full bg-transparent shadow-xl flex items-center justify-center mx-auto mb-6 border-[3px] border-gold/50 hover:scale-105 transition-transform overflow-hidden relative">
-              <img src="/logo.jpeg" alt="Akbar Pura Travel Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
+              <img src="/logo-main.png" alt="Akbar Pura Travel Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
             </div>
           </motion.div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Staff Portal</h1>

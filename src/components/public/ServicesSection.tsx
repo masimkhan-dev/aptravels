@@ -48,13 +48,13 @@ export default function ServicesSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="text-gold font-semibold text-sm uppercase tracking-widest mb-2">
+          <p className="section-label mb-2">
             What We Offer
           </p>
-          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
+          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground tracking-tight">
             Our Services
           </h2>
-          <p className="text-muted-foreground mt-1" dir="rtl">ہماری خدمات</p>
+          <p className="text-muted-foreground mt-2 text-sm" dir="rtl">ہماری خدمات</p>
         </motion.div>
 
         {isLoading ? (
@@ -72,12 +72,12 @@ export default function ServicesSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="group p-6 rounded-xl bg-card shadow-card hover:shadow-card-hover transition-all duration-300 border border-border"
+                  className="group p-7 rounded-2xl bg-card shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-300 gold-border"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-gold-gradient group-hover:shadow-gold transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-gold-gradient group-hover:shadow-gold group-hover:scale-110 transition-all duration-300">
                     <Icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
                   </div>
-                  <h3 className="font-display text-lg font-bold text-card-foreground mb-2">
+                  <h3 className="font-display text-lg font-bold text-card-foreground mb-2 tracking-tight">
                     {s.title}
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">

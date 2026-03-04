@@ -34,13 +34,13 @@ export default function PackagesSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="text-gold font-semibold text-sm uppercase tracking-widest mb-2">
+          <p className="section-label mb-2">
             Travel With Us
           </p>
-          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
+          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground tracking-tight">
             Popular Packages
           </h2>
-          <p className="text-muted-foreground mt-1" dir="rtl">مشہور پیکجز</p>
+          <p className="text-muted-foreground mt-2 text-sm" dir="rtl">مشہور پیکجز</p>
         </motion.div>
 
         {isLoading ? (
@@ -56,7 +56,7 @@ export default function PackagesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative group rounded-2xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden"
+                className="relative group rounded-2xl bg-card gold-border shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-350 overflow-hidden"
               >
                 {pkg.is_popular && (
                   <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-3 py-1 rounded-full bg-gold-gradient text-secondary text-xs font-bold shadow-gold">
@@ -96,8 +96,8 @@ export default function PackagesSection() {
 
                   <div className="flex items-end justify-between pt-4 border-t border-border">
                     <div>
-                      <p className="text-xs text-muted-foreground">Starting from</p>
-                      <p className="font-display text-2xl font-bold text-foreground">
+                      <p className="text-xs text-muted-foreground mb-0.5">Price</p>
+                      <p className="font-display text-2xl font-bold text-gradient-gold">
                         {formatPrice(pkg.price)}
                       </p>
                     </div>
@@ -105,9 +105,9 @@ export default function PackagesSection() {
                       href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi, I'm interested in the ${pkg.title} package.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-5 py-2.5 rounded-lg bg-gold-gradient text-secondary text-sm font-semibold shadow-gold hover:opacity-90 transition-opacity"
+                      className="btn-gold px-5 py-2.5 rounded-xl text-sm"
                     >
-                      Inquire Now
+                      Book Now
                     </a>
                   </div>
                 </div>

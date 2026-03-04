@@ -21,7 +21,7 @@ const links: NavLink[] = [
   { to: "/admin/bookings", icon: CreditCard, label: "Bookings", roles: ['admin', 'manager', 'sales', 'ops'] },
   { to: "/admin/packages", icon: Package, label: "Packages", roles: ['admin', 'manager'] },
   { to: "/admin/services", icon: Briefcase, label: "Services", roles: ['admin', 'manager'] },
-  { to: "/admin/gallery", icon: Images, label: "Gallery", roles: ['admin', 'manager'] },
+  { to: "/admin/gallery", icon: Images, label: "Ads & Promotions", roles: ['admin', 'manager'] },
   { to: "/admin/staff", icon: UserCog, label: "Staff", roles: ['admin'] },
   { to: "/", icon: Globe, label: "View Website", roles: ['admin', 'manager', 'sales', 'ops'] },
 ];
@@ -97,7 +97,7 @@ export default function AdminLayout() {
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-[1.5px] border-gold/50 flex items-center justify-center bg-transparent shadow-gold hover:scale-105 transition-transform relative">
-              <img src="/logo.jpeg" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
+              <img src="/logo-main.png" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
             </div>
             <div>
               <p className="font-display text-sm font-bold leading-tight uppercase text-gold">Akbar Pura Travels</p>

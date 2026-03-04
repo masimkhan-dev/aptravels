@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, User, Phone, Mail, Loader2, BookOpen, ArrowRight, X, Users } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, BookOpen, ArrowRight, X, Users, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Customer {
     id: string;
@@ -73,6 +84,17 @@ export default function AdminCustomers() {
 
         setCustomerBookings((data as any) || []);
         setBookingsLoading(false);
+    };
+
+    const handleDeleteCustomer = async (id: string) => {
+        const { error } = await supabase.from("customers").delete().eq("id", id);
+        if (!error) {
+            toast.success("Customer profile deleted.");
+            setSelectedCustomer(null);
+            fetchCustomers();
+        } else {
+            toast.error(error.message || "Failed to delete customer.");
+        }
     };
 
     useEffect(() => {
@@ -233,12 +255,42 @@ export default function AdminCustomers() {
                                     </p>
                                 )}
                             </div>
-                            <button
-                                onClick={() => setSelectedCustomer(null)}
-                                className="text-muted-foreground hover:text-foreground transition-colors mt-0.5"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <button
+                                            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                                            title="Delete Customer"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the customer profile
+                                                for <strong>{selectedCustomer.full_name}</strong> and remove their data from our servers.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => handleDeleteCustomer(selectedCustomer.id)}
+                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                                Delete Profile
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                                <button
+                                    onClick={() => setSelectedCustomer(null)}
+                                    className="text-muted-foreground hover:text-foreground transition-colors mt-0.5"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Booking List */}

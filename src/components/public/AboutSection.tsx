@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { AGENCY } from "@/lib/constants";
 
 const stats = [
-    { label: "Years of Service", value: "10+" },
+    { label: "Years of Experience", value: "10+" },
     { label: "Happy Pilgrims", value: "5,000+" },
-    { label: "Airline Partners", value: "6" },
-    { label: "Services Offered", value: "8" },
+    { label: "Trusted Travel Office", value: "Nowshera" },
+    { label: "Services Offered", value: "8+" },
 ];
 
 export default function AboutSection() {
@@ -22,9 +22,9 @@ export default function AboutSection() {
                         Who We Are
                     </p>
                     <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
-                        About Us
+                        Serving Pilgrims Since 2014
                     </h2>
-                    <p className="text-muted-foreground mt-1" dir="rtl">ہمارے بارے میں</p>
+                    <p className="text-muted-foreground mt-1" dir="rtl">دیانتداری کے ساتھ خدمت — ۲۰۱۴ سے</p>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 max-w-6xl mx-auto items-center">
@@ -59,20 +59,35 @@ export default function AboutSection() {
                             {AGENCY.name}
                         </h3>
                         <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                            Akbar Pura International Travels &amp; Tours has been serving pilgrims,
-                            travelers, and families from Nowshera and across KPK for years.
-                            Based in the heart of Akbar Pura, we are a trusted name for Hajj
-                            &amp; Umrah packages, international airline ticketing, and complete
-                            visa processing services including Work, Student & Visit Visas.
+                            Akbar Pura International Travels & Tours has been serving people of
+                            Nowshera and nearby areas since 2014. We help families plan their Hajj
+                            and Umrah trips, book airline tickets, and process visas — without the stress.
                         </p>
                         <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                            Under the leadership of{" "}
-                            <span className="text-foreground font-semibold">Shahab Khan</span>,
-                            our team is committed to making your travel experience seamless,
-                            affordable, and spiritually fulfilling. We work directly with top
-                            airlines — Gulf Air, Emirates, Saudia, Qatar Airways, PIA, and Oman
-                            Air — to bring you the most competitive fares.
+                            Our office is at Madina Market, Akbar Pura. You can walk in and talk to
+                            us directly.{" "}
+                            <span className="text-foreground font-semibold">Shahab Khan</span>{" "}
+                            and our team take care of your paperwork, bookings, and arrangements
+                            — so you can focus on your journey.
                         </p>
+                        <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                            For tickets, we work with Emirates, Qatar Airways, Saudia,
+                            Pakistan International Airlines, and Oman Air. We find the right
+                            option based on your dates and budget.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                            {[
+                                "Clear and honest pricing",
+                                "Personal support at every step",
+                                "Complete documentation assistance",
+                                "Friendly and experienced staff",
+                            ].map((point) => (
+                                <p key={point} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <span className="text-gold font-bold mt-0.5">✔</span>
+                                    {point}
+                                </p>
+                            ))}
+                        </div>
                     </motion.div>
                 </div>
             </div>

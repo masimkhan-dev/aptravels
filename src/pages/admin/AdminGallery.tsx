@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Loader2, X, Eye, EyeOff, Settings2, Check } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Eye, EyeOff, Settings2, Check, Upload } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -30,7 +30,7 @@ interface GalleryCategory {
     sort_order: number;
 }
 
-const emptyPhoto = { image_url: "", alt: "", category: "Makkah", is_active: true, sort_order: 0 };
+const emptyPhoto = { image_url: "", alt: "", category: "General Offer", is_active: true, sort_order: 0 };
 const emptyCat = { name: "", label_urdu: "", sort_order: 0 };
 
 export default function AdminGallery() {
@@ -42,6 +42,7 @@ export default function AdminGallery() {
     const [form, setForm] = useState(emptyPhoto);
     const [catForm, setCatForm] = useState(emptyCat);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [filterCat, setFilterCat] = useState("All");
 
     const fetchData = async () => {
@@ -64,15 +65,44 @@ export default function AdminGallery() {
 
     useEffect(() => { fetchData(); }, []);
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `flyers/${fileName}`;
+
+            const { error: uploadError, data } = await supabase.storage
+                .from('gallery')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('gallery')
+                .getPublicUrl(filePath);
+
+            updatePhoto("image_url", publicUrl);
+            toast.success("Image uploaded successfully");
+        } catch (error: any) {
+            toast.error("Upload failed: " + error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSavePhoto = async () => {
         if (!form.image_url || !form.alt) return;
         setSaving(true);
         try {
             const { error } = await (supabase as any).from("gallery").insert(form);
             if (error) throw error;
-            toast.success("Photo added successfully");
+            toast.success("Ad Flyer added to list");
             setModal(false);
-            setForm({ ...emptyPhoto, category: categories[0]?.name || "Makkah" });
+            setForm({ ...emptyPhoto, category: categories[0]?.name || "Visas" });
             fetchData();
         } catch (error: any) {
             toast.error(error.message);
@@ -173,10 +203,10 @@ export default function AdminGallery() {
                             <Settings2 className="w-4 h-4" /> Manage Categories
                         </button>
                         <button
-                            onClick={() => { setForm({ ...emptyPhoto, category: categories[0]?.name || "Makkah" }); setModal(true); }}
+                            onClick={() => { setForm({ ...emptyPhoto, category: categories[0]?.name || "Visas" }); setModal(true); }}
                             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-gradient text-secondary text-sm font-semibold shadow-gold hover:opacity-90 transition-opacity"
                         >
-                            <Plus className="w-4 h-4" /> Add Photo
+                            <Plus className="w-4 h-4" /> Add New Ad Flyer
                         </button>
                     </div>
                 </div>
@@ -234,15 +264,44 @@ export default function AdminGallery() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 px-4">
                     <div className="bg-card rounded-2xl w-full max-w-md p-6 shadow-xl">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-display text-lg font-bold text-card-foreground">Add Photo</h2>
+                            <h2 className="font-display text-lg font-bold text-card-foreground">Post New Promotion</h2>
                             <button onClick={() => setModal(false)} className="text-muted-foreground"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs text-muted-foreground mb-1 block">Image URL *</label>
-                                <input value={form.image_url} onChange={(e) => updatePhoto("image_url", e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-gold" />
+                                <label className="text-xs text-muted-foreground mb-1 block">Image *</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={form.image_url}
+                                        onChange={(e) => updatePhoto("image_url", e.target.value)}
+                                        placeholder="Paste image URL..."
+                                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-gold"
+                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileUpload}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            disabled={uploading}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="px-3 py-2 rounded-lg bg-muted text-foreground text-sm flex items-center gap-2 hover:bg-muted/80 transition-colors"
+                                        >
+                                            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                            Upload
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-1">Paste a URL or upload a file from your computer.</p>
                             </div>
-                            {form.image_url && <img src={form.image_url} alt="preview" className="w-full h-36 object-cover rounded-lg border border-border" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
+                            {form.image_url && (
+                                <div className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted/30">
+                                    <img src={form.image_url} alt="preview" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                                </div>
+                            )}
                             <div>
                                 <label className="text-xs text-muted-foreground mb-1 block">Caption / Alt Text *</label>
                                 <input value={form.alt} onChange={(e) => updatePhoto("alt", e.target.value)} placeholder="e.g. Masjid al-Haram, Makkah" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-gold" />
@@ -264,7 +323,7 @@ export default function AdminGallery() {
                         <div className="flex justify-end gap-3 mt-6">
                             <button onClick={() => setModal(false)} className="px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground">Cancel</button>
                             <button onClick={handleSavePhoto} disabled={saving || !form.image_url || !form.alt} className="px-5 py-2 rounded-lg bg-gold-gradient text-secondary text-sm font-semibold shadow-gold flex items-center gap-2">
-                                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add Photo
+                                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Post Advertisement
                             </button>
                         </div>
                     </div>

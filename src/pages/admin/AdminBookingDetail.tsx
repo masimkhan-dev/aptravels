@@ -5,7 +5,8 @@ import { useRole } from "@/hooks/useRole";
 import { toast } from "sonner";
 import {
     ArrowLeft, Printer, DollarSign, Calendar, Eye, EyeOff, User,
-    ShieldCheck, X, CheckCircle2, History, Loader2, Package, Plane, Ticket, FileText, Check, Globe
+    ShieldCheck, X, CheckCircle2, History, Loader2, Package, Plane, Ticket, FileText, Check, Globe,
+    FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert
 } from "lucide-react";
 import { AGENCY } from "@/lib/constants";
 
@@ -42,13 +43,24 @@ interface Payment {
     void_reason: string | null;
 }
 
+interface Agreement {
+    id: string;
+    storage_path: string;
+    stamp_serial_no: string;
+    signed_date: string;
+    status: 'pending' | 'verified' | 'rejected';
+    file_hash: string;
+}
+
 export default function AdminBookingDetail() {
     const { id } = useParams();
     const { role } = useRole();
     const [booking, setBooking] = useState<BookingDetail | null>(null);
     const [payments, setPayments] = useState<Payment[]>([]);
+    const [agreement, setAgreement] = useState<Agreement | null>(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
+    const [recordingAgreement, setRecordingAgreement] = useState(false);
 
     // Payment Form
     const [payAmount, setPayAmount] = useState("");
@@ -62,6 +74,10 @@ export default function AdminBookingDetail() {
     // CNIC Reveal State (PII protection)
     const [cnicRevealed, setCnicRevealed] = useState(false);
 
+    // Agreement Upload Form state
+    const [stampSerial, setStampSerial] = useState("");
+    const [stampDate, setStampDate] = useState(new Date().toISOString().split('T')[0]);
+
     const fetchData = async () => {
         const { data: b } = await (supabase.from("bookings" as any) as any).select(`
       *, 
@@ -74,8 +90,14 @@ export default function AdminBookingDetail() {
             .eq("booking_id", id)
             .order("payment_date", { ascending: true });
 
+        const { data: a } = await (supabase.from("booking_agreements" as any) as any)
+            .select("*")
+            .eq("booking_id", id)
+            .single();
+
         if (b) setBooking(b as any);
         if (p) setPayments(p as any);
+        if (a) setAgreement(a as any);
         setLoading(false);
     };
 
@@ -148,6 +170,35 @@ export default function AdminBookingDetail() {
 
         if (!error) fetchData();
     };
+
+    const handleAgreementRecord = async (serialNo: string, signedDate: string) => {
+        if (!id || !serialNo) {
+            toast.error("Please enter the Stamp Paper Serial Number");
+            return;
+        }
+        setRecordingAgreement(true);
+
+        try {
+            const { error: dbError } = await (supabase.from("booking_agreements" as any) as any).insert({
+                booking_id: id,
+                stamp_serial_no: serialNo,
+                signed_date: signedDate,
+                is_received: true,
+                recorded_by: (await supabase.auth.getUser()).data.user?.id
+            });
+
+            if (dbError) throw dbError;
+
+            toast.success("Physical Agreement recorded in system");
+            fetchData();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to record agreement");
+        } finally {
+            setRecordingAgreement(false);
+        }
+    };
+
+    // Remove viewAgreement as images are no longer stored
 
     const totalPaid = payments.filter(p => !p.voided).reduce((s, p) => s + p.amount_paid, 0);
     const balance = (booking?.total_price || 0) - totalPaid;
@@ -455,6 +506,79 @@ export default function AdminBookingDetail() {
 
                     {/* Right: Summary Sidebar (Hidden in Print) */}
                     <div className="space-y-6 no-print">
+                        {/* Legal Agreement Card (Smart Proof) */}
+                        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 opacity-[0.03] rotate-12">
+                                <FileSignature className="w-full h-full text-gold" />
+                            </div>
+
+                            <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black mb-4 flex items-center gap-2">
+                                <Stamp className="w-3.5 h-3.5 text-gold" /> Legal Agreement (Ikrar Nama)
+                            </h3>
+
+                            {agreement ? (
+                                <div className="space-y-4 animate-in fade-in duration-300">
+                                    <div className="p-4 bg-green-500/5 rounded-xl border border-green-500/20 relative">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-[10px] uppercase font-bold text-green-600 tracking-tighter flex items-center gap-1">
+                                                <CheckCircle2 className="w-3 h-3" /> Physically Received
+                                            </span>
+                                            <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-green-500 text-white">
+                                                In Office File
+                                            </span>
+                                        </div>
+                                        <p className="text-xs font-mono font-black text-foreground mb-1">SN: {agreement.stamp_serial_no}</p>
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                                            <Calendar className="w-3 h-3" /> Signed on: {new Date(agreement.signed_date).toLocaleDateString()}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-3 bg-muted/30 rounded-xl border border-border/50">
+                                        <p className="text-[10px] text-muted-foreground font-medium italic">
+                                            Agreement is safely stored in the office physical archives.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 gap-3">
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] uppercase font-black text-muted-foreground ml-1">Stamp Serial Number (Physical)</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter number from paper"
+                                                className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-xs outline-none focus:ring-1 focus:ring-gold"
+                                                value={stampSerial}
+                                                onChange={e => setStampSerial(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] uppercase font-black text-muted-foreground ml-1">Signature Date</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-xs outline-none focus:ring-1 focus:ring-gold"
+                                                value={stampDate}
+                                                onChange={e => setStampDate(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => handleAgreementRecord(stampSerial, stampDate)}
+                                        disabled={recordingAgreement || !stampSerial}
+                                        className="w-full py-3 bg-gold text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                    >
+                                        {recordingAgreement ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-4 h-4" />}
+                                        {recordingAgreement ? "Recording..." : "Confirm Physical Receipt"}
+                                    </button>
+
+                                    <p className="text-[9px] text-muted-foreground text-center font-medium italic">
+                                        This marks the paper as 'Locked' in office files.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                             <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black mb-4 flex items-center gap-2">
                                 <User className="w-3.5 h-3.5" /> Customer Identity
@@ -614,7 +738,7 @@ export default function AdminBookingDetail() {
                     <div className="flex justify-between items-center mb-4 bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50">
                         <div className="flex items-center gap-5">
                             <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-                                <img src="/logo.jpeg" alt="Logo" className="h-[55px] w-auto object-contain mix-blend-multiply" />
+                                <img src="/logo-main.png" alt="Logo" className="h-[55px] w-auto object-contain mix-blend-multiply" />
                             </div>
                             <div>
                                 <h1 className="text-base font-black text-blue-900 leading-none mb-1 uppercase tracking-tight">
