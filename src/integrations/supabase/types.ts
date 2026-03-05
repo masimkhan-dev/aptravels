@@ -60,6 +60,7 @@ export type Database = {
                     visa_step_enumber_generated: boolean
                     visa_step_protector_stamp: boolean
                     visa_step_final_stamping: boolean
+                    margin: number | null
                     deleted_at: string | null
                     created_at: string
                     updated_at: string
@@ -84,6 +85,7 @@ export type Database = {
                     visa_step_enumber_generated?: boolean
                     visa_step_protector_stamp?: boolean
                     visa_step_final_stamping?: boolean
+                    margin?: number | null
                     deleted_at?: string | null
                     created_at?: string
                     updated_at?: string
@@ -108,6 +110,7 @@ export type Database = {
                     visa_step_enumber_generated?: boolean
                     visa_step_protector_stamp?: boolean
                     visa_step_final_stamping?: boolean
+                    margin?: number | null
                     deleted_at?: string | null
                     created_at?: string
                     updated_at?: string

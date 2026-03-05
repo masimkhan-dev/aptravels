@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
     ArrowLeft, Printer, DollarSign, Calendar, Eye, EyeOff, User,
     ShieldCheck, X, CheckCircle2, History, Loader2, Package, Plane, Ticket, FileText, Check, Globe,
-    FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert
+    FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert, TrendingUp
 } from "lucide-react";
 import { AGENCY } from "@/lib/constants";
 
@@ -29,6 +29,7 @@ interface BookingDetail {
     visa_step_enumber_generated: boolean;
     visa_step_protector_stamp: boolean;
     visa_step_final_stamping: boolean;
+    margin: number | null;
     customers: { full_name: string; phone: string; address: string; cnic_passport: string };
     packages: { title: string; destination: string; duration: string } | null;
 }
@@ -65,6 +66,7 @@ export default function AdminBookingDetail() {
     // Payment Form
     const [payAmount, setPayAmount] = useState("");
     const [payMethod, setPayMethod] = useState("Cash");
+    const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Void Modal State
     const [voidTargetId, setVoidTargetId] = useState<string | null>(null);
@@ -77,6 +79,11 @@ export default function AdminBookingDetail() {
     // Agreement Upload Form state
     const [stampSerial, setStampSerial] = useState("");
     const [stampDate, setStampDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Margin Editing
+    const [isEditingMargin, setIsEditingMargin] = useState(false);
+    const [editMarginValue, setEditMarginValue] = useState("");
+    const [updatingMargin, setUpdatingMargin] = useState(false);
 
     const fetchData = async () => {
         const { data: b } = await (supabase.from("bookings" as any) as any).select(`
@@ -95,7 +102,10 @@ export default function AdminBookingDetail() {
             .eq("booking_id", id)
             .single();
 
-        if (b) setBooking(b as any);
+        if (b) {
+            setBooking(b as any);
+            setEditMarginValue(String(b.margin || 0));
+        }
         if (p) setPayments(p as any);
         if (a) setAgreement(a as any);
         setLoading(false);
@@ -120,7 +130,7 @@ export default function AdminBookingDetail() {
             booking_id: id,
             amount_paid: amount,
             payment_method: payMethod,
-            payment_date: new Date().toISOString()
+            payment_date: payDate || new Date().toISOString()
         });
 
         if (error) {
@@ -242,6 +252,23 @@ export default function AdminBookingDetail() {
         }
     };
 
+    const handleUpdateMargin = async () => {
+        setUpdatingMargin(true);
+        const { error } = await (supabase
+            .from("bookings" as any) as any)
+            .update({ margin: Number(editMarginValue) || 0 })
+            .eq("id", id);
+
+        if (error) {
+            toast.error(error.message || "Failed to update margin.");
+        } else {
+            toast.success("Profit margin updated.");
+            setIsEditingMargin(false);
+            fetchData();
+        }
+        setUpdatingMargin(false);
+    };
+
     const handlePrint = () => {
         window.print();
     };
@@ -346,7 +373,7 @@ export default function AdminBookingDetail() {
                                                 key={step.key}
                                                 onClick={() => canEditVisa && toggleVisaStep(step.key as any, isDone)}
                                                 className={`flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border transition-all text-center relative overflow-hidden group ${isDone
-                                                    ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20 translate-y-[-2px]'
+                                                    ? 'bg-emerald-600 border-emerald-600 shadow-lg shadow-emerald-500/20 translate-y-[-2px]'
                                                     : 'bg-background border-border hover:border-blue-400 hover:bg-muted/50'
                                                     } ${!canEditVisa ? 'opacity-70 cursor-not-allowed' : ''}`}
                                                 disabled={!canEditVisa}
@@ -360,8 +387,8 @@ export default function AdminBookingDetail() {
                                                     {step.label}
                                                 </span>
 
-                                                {/* Subtle Glassmorphism shine for active cards */}
-                                                {isDone && <div className="absolute top-0 left-[-100%] w-full h-full bg-white/10 skew-x-[-20deg] group-hover:left-[100%] transition-all duration-700" />}
+                                                {/* Subtle glass effect for active cards */}
+                                                {isDone && <div className="absolute top-0 left-[-100%] w-full h-full bg-white/10 skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />}
                                             </button>
                                         );
                                     })}
@@ -377,6 +404,48 @@ export default function AdminBookingDetail() {
                                     <p className="text-2xl font-black text-gold">Rs {balance.toLocaleString()}</p>
                                 </div>
                             </div>
+
+                            {(role === 'admin' || role === 'manager') && booking.margin !== undefined && (
+                                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 m-6 mb-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2 text-emerald-600">
+                                            <TrendingUp className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Profit Margin</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsEditingMargin(!isEditingMargin)}
+                                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight"
+                                        >
+                                            {isEditingMargin ? "Cancel" : "Edit Margin"}
+                                        </button>
+                                    </div>
+
+                                    {isEditingMargin ? (
+                                        <div className="flex gap-2 mt-2">
+                                            <div className="relative flex-1">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-[10px] font-black">Rs</span>
+                                                <input
+                                                    type="number"
+                                                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-emerald-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-emerald-700"
+                                                    value={editMarginValue}
+                                                    onChange={e => setEditMarginValue(e.target.value)}
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={handleUpdateMargin}
+                                                disabled={updatingMargin}
+                                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 transition-all flex items-center gap-2"
+                                            >
+                                                {updatingMargin ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                                Save
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xl font-black text-emerald-700">Rs {Number(booking.margin || 0).toLocaleString()}</p>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="divide-y divide-border">
                                 {payments.length === 0 && (
                                     <div className="p-12 text-center text-muted-foreground italic bg-background/50">No payments recorded yet.</div>
@@ -424,7 +493,7 @@ export default function AdminBookingDetail() {
                         {(role === 'admin' || role === 'manager') && booking.status !== 'Completed' && booking.status !== 'Voided' && (
                             <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                                 <h3 className="font-bold mb-4 flex items-center gap-2"><DollarSign className="w-4 h-4 text-green-500" /> Professional Receipting</h3>
-                                <form onSubmit={handlePayment} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <form onSubmit={handlePayment} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">Rs</span>
                                         <input
@@ -436,6 +505,12 @@ export default function AdminBookingDetail() {
                                             onChange={e => setPayAmount(e.target.value)}
                                         />
                                     </div>
+                                    <input
+                                        type="date"
+                                        className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold text-sm"
+                                        value={payDate}
+                                        onChange={e => setPayDate(e.target.value)}
+                                    />
                                     <select
                                         className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-medium"
                                         value={payMethod}
@@ -631,13 +706,6 @@ export default function AdminBookingDetail() {
                                         <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Airline & Sector</p>
                                         <p className="font-black text-sm text-foreground uppercase tracking-tight">{booking.airline_name || "Unknown"} • {booking.ticket_sector || "No Sector"}</p>
                                     </div>
-                                    <div className="p-3 bg-gold/5 rounded-xl border border-gold/20 flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[10px] text-muted-foreground font-bold uppercase">PNR Number</p>
-                                            <p className="font-black text-xl text-gold font-mono tracking-widest">{booking.pnr_number || "PENDING"}</p>
-                                        </div>
-                                        <Ticket className="w-6 h-6 text-gold/30" />
-                                    </div>
                                     <div className="p-3 bg-muted/40 rounded-xl border border-border/50">
                                         <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1 flex items-center gap-1">
                                             <Calendar className="w-2.5 h-2.5" /> Flight Date
@@ -647,7 +715,7 @@ export default function AdminBookingDetail() {
                                 </div>
                             ) : booking.booking_type === 'Visa' ? (
                                 <div className="space-y-4">
-                                    <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                                    <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-100">
                                         <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1 underline decoration-blue-500/30">Target Country</p>
                                         <p className="font-black text-xl text-blue-600 uppercase tracking-tighter">{booking.visa_country || "Not Specified"}</p>
                                     </div>
@@ -707,217 +775,183 @@ export default function AdminBookingDetail() {
                             width: 100%;
                             padding: 0;
                             margin: 0;
-                            font-size: 9pt;
-                            color: #0f172a;
+                            font-size: 10pt;
+                            color: #000;
+                            background: #fff !important;
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
                         @page { 
                             size: A4; 
-                            margin: 6mm; 
+                            margin: 10mm; 
                         }
                         .invoice-container {
                             width: 100%;
-                            max-height: 285mm;
-                            display: flex;
-                            flex-direction: column;
+                            background: #fff !important;
                         }
-                        h1, h2, h3, h4 { page-break-after: avoid; }
-                        tr { page-break-inside: avoid; }
+                        * { 
+                            background-color: transparent !important;
+                            color: #000 !important;
+                            box-shadow: none !important;
+                            text-shadow: none !important;
+                            filter: none !important;
+                        }
+                        .print-border { border: 1px solid #000 !important; }
+                        .text-bold { font-weight: 900 !important; }
+                        .text-large { font-size: 14pt !important; }
                     }
                 `}} />
 
                 <div className="invoice-container">
-                    {/* --- 🔳 TOP COLOR BAR --- */}
-                    <div className="flex h-3 w-full mb-4">
-                        <div className="w-2/3 bg-blue-900 rounded-l-full" />
-                        <div className="w-1/3 bg-amber-500 rounded-r-full ml-1" />
-                    </div>
+                    {/* --- 🔳 TOP BORDER --- */}
+                    <div className="h-1 w-full bg-black mb-6" />
 
                     {/* --- 🔳 HEADER SECTION --- */}
-                    <div className="flex justify-between items-center mb-4 bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50">
-                        <div className="flex items-center gap-5">
-                            <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-                                <img src="/logo-main.png" alt="Logo" className="h-[55px] w-auto object-contain mix-blend-multiply" />
-                            </div>
+                    <div className="flex justify-between items-start mb-8 p-0">
+                        <div className="flex items-center gap-6">
+                            <img src="/logo-main.png" alt="Logo" className="h-[80px] w-auto object-contain grayscale" />
                             <div>
-                                <h1 className="text-base font-black text-blue-900 leading-none mb-1 uppercase tracking-tight">
+                                <h1 className="text-xl font-black text-black leading-none mb-1 uppercase tracking-tight">
                                     {AGENCY.name}
                                 </h1>
-                                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-2 opacity-80">{AGENCY.tagline}</p>
-                                <div className="text-[8px] text-slate-500 font-bold leading-tight space-y-0.5">
-                                    <p className="flex items-center gap-1.5"><span className="w-1 h-1 bg-amber-500 rounded-full" /> {AGENCY.address}</p>
-                                    <p className="flex items-center gap-1.5"><span className="w-1 h-1 bg-blue-500 rounded-full" /> Phone: {AGENCY.phones.join(' | ')}</p>
-                                    <p className="flex items-center gap-1.5"><span className="w-1 h-1 bg-blue-500 rounded-full" /> Email: {AGENCY.email}</p>
+                                <p className="text-[9px] font-bold text-black uppercase tracking-widest leading-none mb-4">{AGENCY.tagline}</p>
+                                <div className="text-[9px] text-black space-y-1">
+                                    <p>Address: {AGENCY.address}</p>
+                                    <p>Phone: {AGENCY.phones.join(' | ')}</p>
+                                    <p>Email: {AGENCY.email}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="bg-blue-900 text-white px-4 py-1.5 mb-2 inline-block rounded-lg shadow-md lg:shadow-none">
-                                <p className="text-[7px] uppercase tracking-[0.2em] font-black text-blue-200">Official Invoice Ref</p>
-                                <p className="text-sm font-black tracking-wider">{booking.invoice_no}</p>
-                            </div>
-                            <div className="mt-1">
-                                <span className={`inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm border ${balance === 0 ? 'bg-green-500 text-white border-green-600' : 'bg-amber-500 text-white border-amber-600'}`}>
-                                    {balance === 0 ? '✓ FULLY PAID' : 'PENDING SETTLEMENT'}
-                                </span>
-                            </div>
-                            <p className="text-[9px] font-black text-blue-900/40 uppercase mt-2 tracking-tighter">Dated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                            <h2 className="text-2xl font-black uppercase tracking-widest mb-1">INVOICE</h2>
+                            <p className="text-sm font-bold font-mono">#{booking.invoice_no}</p>
+                            <p className="text-[10px] mt-2 font-bold">DATE: {new Date().toLocaleDateString('en-GB')}</p>
                         </div>
                     </div>
 
                     {/* --- 🔳 INFO CARDS --- */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-8 mb-8">
                         {/* Bill To */}
-                        <div className="border-l-4 border-blue-900 bg-blue-50/30 p-4 rounded-r-xl">
-                            <h3 className="text-[10px] font-black text-blue-900 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                                <span className="p-1 bg-blue-900 rounded text-white"><User className="w-3 h-3" /></span> Client Registration
-                            </h3>
-                            <div className="space-y-2 text-[9px]">
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">Beneficiary:</span> <span className="font-black text-blue-900 uppercase">{booking.customers.full_name}</span></p>
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">ID/Passport:</span> <span className="font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-100">{booking.customers.cnic_passport || 'NOT RECORDED'}</span></p>
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">Contact:</span> <span className="font-black text-slate-800">{booking.customers.phone}</span></p>
+                        <div className="p-0 border-t-2 border-black pt-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4">CLIENT INFORMATION</h3>
+                            <div className="space-y-2 text-[10px]">
+                                <p className="flex justify-between items-center"><span className="font-bold">NAME:</span> <span className="font-black uppercase">{booking.customers.full_name}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">ID/PASSPORT:</span> <span className="font-mono font-bold">{booking.customers.cnic_passport || '---'}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">PHONE:</span> <span className="font-black">{booking.customers.phone}</span></p>
                             </div>
                         </div>
 
                         {/* Booking details */}
-                        <div className="border-l-4 border-amber-500 bg-amber-50/30 p-4 rounded-r-xl">
-                            <h3 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                                <span className="p-1 bg-amber-500 rounded text-white"><Package className="w-3 h-3" /></span> Booking Manifest
-                            </h3>
-                            <div className="space-y-2 text-[9px]">
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">Service Type:</span> <span className="font-black text-blue-900 bg-blue-100 px-2 py-0.5 rounded uppercase">{booking.booking_type}</span></p>
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">Tracking ID:</span> <span className="font-mono font-bold text-slate-700 uppercase tracking-tighter">{booking.id.slice(0, 15)}</span></p>
-                                <p className="flex justify-between items-center"><span className="text-slate-400 font-bold uppercase">Departure:</span> <span className="font-black text-slate-900 flex items-center gap-1"><Calendar className="w-3 h-3 text-amber-500" /> {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-GB') : 'TO BE CONFIRMED'}</span></p>
+                        <div className="p-0 border-t-2 border-black pt-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4">SERVICE SUMMARY</h3>
+                            <div className="space-y-2 text-[10px]">
+                                <p className="flex justify-between items-center"><span className="font-bold">SERVICE:</span> <span className="font-black uppercase border border-black px-2">{booking.booking_type}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">FILE ID:</span> <span className="font-mono font-bold uppercase">{booking.id.slice(0, 8)}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">TRAVEL DATE:</span> <span className="font-black">{booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-GB') : 'PENDING'}</span></p>
                             </div>
                         </div>
                     </div>
 
                     {/* --- 🔳 SERVICE TABLE --- */}
-                    <div className="mb-4 overflow-hidden rounded-xl border border-blue-100">
+                    <div className="mb-6 overflow-hidden border border-black">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="bg-blue-900 text-[8px] font-black text-blue-100 uppercase tracking-widest">
-                                    <th className="p-2 text-left bg-blue-950">Description</th>
-                                    <th className="p-2 text-left">Sector / Destination</th>
-                                    <th className="p-2 text-left">Provider / Airline</th>
-                                    <th className="p-2 text-left">PNR / Reference</th>
-                                    <th className="p-2 text-center bg-amber-500 text-white">Travel Date</th>
+                                <tr className="border-b border-black text-[9px] font-black uppercase">
+                                    <th className="p-3 text-left">SERVICE / ITEM</th>
+                                    <th className="p-3 text-left">SECTOR / COUNTRY</th>
+                                    <th className="p-3 text-left">AIRLINE / JOB</th>
+                                    <th className="p-3 text-center">TRAVEL DATE</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-[9px]">
-                                <tr>
-                                    <td className="p-3 font-black text-blue-900 border-b border-slate-100">
-                                        {booking.booking_type === 'Ticket' ? (
-                                            <div className="flex items-center gap-2"><Plane className="w-3 h-3" /> Air Ticket</div>
-                                        ) : (
-                                            <div className="flex items-center gap-2"><Globe className="w-3 h-3" /> Visa Processing</div>
-                                        )}
+                            <tbody className="text-[10px]">
+                                <tr className="border-b border-black">
+                                    <td className="p-3 font-black uppercase">
+                                        {booking.booking_type}
                                     </td>
-                                    <td className="p-3 font-black text-slate-900 uppercase border-b border-slate-100">
+                                    <td className="p-3 font-bold uppercase">
                                         {booking.booking_type === 'Ticket' ? (booking.ticket_sector || '-') : (booking.visa_country || '-')}
                                     </td>
-                                    <td className="p-3 font-bold uppercase text-slate-600 border-b border-slate-100">
+                                    <td className="p-3 font-bold uppercase">
                                         {booking.booking_type === 'Ticket' ? (booking.airline_name || '-') : (booking.visa_profession || '-')}
                                     </td>
-                                    <td className="p-3 font-black font-mono tracking-widest text-blue-700 uppercase border-b border-slate-100 bg-blue-50/10">
-                                        {booking.pnr_number || 'PENDING'}
-                                    </td>
-                                    <td className="p-3 text-center font-black text-blue-900 border-b border-slate-100 bg-amber-50/20">
-                                        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'TBC'}
+                                    <td className="p-3 text-center font-black">
+                                        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-GB') : 'PENDING'}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    {/* --- 🔳 LEDGER TABLE --- */}
-                    <div className="mb-4 overflow-hidden rounded-xl border border-slate-100">
-                        <table className="w-full">
+                    <div className="mb-8 overflow-hidden border border-black">
+                        <table className="w-full border-collapse">
                             <thead>
-                                <tr className="bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest">
-                                    <th className="p-2 text-left">Payment Date</th>
-                                    <th className="p-2 text-left">Transaction Method</th>
-                                    <th className="p-2 text-center bg-green-600">Verification</th>
-                                    <th className="p-2 text-right">Amount (PKR)</th>
+                                <tr className="border-b border-black text-[9px] font-black uppercase">
+                                    <th className="p-2 text-left">PAYMENT DATE</th>
+                                    <th className="p-2 text-left">METHOD</th>
+                                    <th className="p-2 text-right">AMOUNT (PKR)</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-[9px]">
-                                {payments.filter(p => !p.voided).map((p, idx) => (
-                                    <tr key={p.id} className={idx % 2 === 1 ? 'bg-blue-50/20' : 'bg-white'}>
-                                        <td className="px-3 py-2 border-b border-slate-50 font-bold text-slate-500">{new Date(p.payment_date).toLocaleDateString('en-GB')}</td>
-                                        <td className="px-3 py-2 border-b border-slate-50 font-black text-blue-900 uppercase tracking-tighter flex items-center gap-2">
-                                            <DollarSign className="w-3 h-3 text-amber-500" /> {p.payment_method}
-                                        </td>
-                                        <td className="px-3 py-2 border-b border-slate-50 text-center">
-                                            <span className="text-[7px] font-black uppercase px-3 py-0.5 bg-green-500 text-white rounded-full">✓ Confirmed</span>
-                                        </td>
-                                        <td className="px-3 py-2 border-b border-slate-50 text-right font-black text-blue-900">Rs {p.amount_paid.toLocaleString()}</td>
+                            <tbody className="text-[10px]">
+                                {payments.filter(p => !p.voided).map((p) => (
+                                    <tr key={p.id} className="border-b border-black">
+                                        <td className="px-3 py-2 font-bold">{new Date(p.payment_date).toLocaleDateString('en-GB')}</td>
+                                        <td className="px-3 py-2 font-black uppercase">{p.payment_method}</td>
+                                        <td className="px-3 py-2 text-right font-black">Rs {p.amount_paid.toLocaleString()}</td>
                                     </tr>
                                 ))}
                                 {payments.filter(p => !p.voided).length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="py-6 text-center text-slate-300 italic font-black text-xs uppercase tracking-widest">Registry Empty - No Transactions recorded.</td>
+                                        <td colSpan={3} className="py-6 text-center italic font-black text-xs uppercase tracking-widest">No payments recorded.</td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
 
-                    {/* --- 🔳 SUMMARY & AUTHENTICATION --- */}
-                    <div className="grid grid-cols-2 gap-8 mt-auto mb-4 items-end bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                    <div className="grid grid-cols-2 gap-12 mt-auto mb-8 items-end p-0">
                         {/* Summary */}
-                        <div className="space-y-1.5">
-                            <div className="flex justify-between items-center text-[9px] px-2">
-                                <span className="text-slate-400 font-black uppercase">Total Net Value:</span>
-                                <span className="text-blue-900 font-black">Rs {Number(booking.total_price).toLocaleString()}</span>
+                        <div className="space-y-2 border-t-2 border-black pt-4">
+                            <div className="flex justify-between items-center text-[10px]">
+                                <span className="font-bold uppercase tracking-tight">Total Quote Value:</span>
+                                <span className="font-black">Rs {Number(booking.total_price).toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between items-center text-[9px] px-2 text-green-600">
-                                <span className="font-black uppercase tracking-tight">Total Settled Amount:</span>
-                                <span className="font-black text-xs">Rs {totalPaid.toLocaleString()}</span>
+                            <div className="flex justify-between items-center text-[10px]">
+                                <span className="font-bold uppercase tracking-tight">Total Amount Received:</span>
+                                <span className="font-black">Rs {totalPaid.toLocaleString()}</span>
                             </div>
-                            <div className={`flex justify-between items-center px-4 py-3 rounded-2xl shadow-sm border-2 ${balance === 0 ? 'bg-green-600 border-green-700 text-white' : 'bg-blue-900 border-blue-950 text-white'}`}>
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em]">{balance === 0 ? 'BALANCE CLEARED' : 'REMAINING BALANCE:'}</span>
-                                <span className="text-lg font-black tracking-tight">Rs {balance.toLocaleString()}</span>
+                            <div className="flex justify-between items-center pt-2 border-t border-black">
+                                <span className="text-[12px] font-black uppercase">REMAINING BALANCE:</span>
+                                <span className="text-xl font-black">Rs {balance.toLocaleString()}</span>
                             </div>
                         </div>
 
                         {/* Signatures */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-8">
                             <div className="text-center relative">
-                                <div className="border-t-2 border-slate-200 mt-12 pt-2">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Customer Sign</p>
+                                <div className="border-t border-black mt-16 pt-2">
+                                    <p className="text-[9px] font-black uppercase">Customer Signature</p>
                                 </div>
                             </div>
                             <div className="text-center relative">
-                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 border-2 border-blue-900/10 rounded-full flex items-center justify-center opacity-40 rotate-[15deg]">
-                                    <div className="w-16 h-16 border border-dashed border-blue-900/20 rounded-full flex flex-col items-center justify-center">
-                                        <span className="text-[6px] font-black text-blue-900 leading-none">OFFICIAL</span>
-                                        <span className="text-[6px] font-black text-amber-600">VERIFIED</span>
-                                    </div>
-                                </div>
-                                <div className="border-t-2 border-blue-900 mt-12 pt-2">
-                                    <p className="text-[8px] font-black text-blue-900 uppercase tracking-widest leading-none">Authorized Agent</p>
-                                    <p className="text-[7px] font-black text-amber-600 mt-1 uppercase opacity-80">Akbarpura Int'l</p>
+                                <div className="border-t border-black mt-16 pt-2">
+                                    <p className="text-[9px] font-black uppercase">Authorized Agent</p>
+                                    <p className="text-[7px] font-bold mt-1 uppercase">Akbar Pura International</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* --- 🔳 COMPLIANCE FOOTER --- */}
-                    <div className="flex justify-between items-center bg-blue-900 p-4 rounded-2xl text-white">
-                        <div className="max-w-[450px] flex items-center gap-3">
-                            <div className="p-2 bg-blue-800 rounded-full"><ShieldCheck className="w-5 h-5 text-amber-400" /></div>
-                            <div>
-                                <h4 className="text-[9px] font-black uppercase tracking-widest text-amber-400 mb-0.5">Legal Disclaimer:</h4>
-                                <p className="text-[7px] font-bold leading-tight uppercase text-blue-100 opacity-80">
-                                    System Document • Re-verify flight manifest 24h prior • Non-refundable post-issuance • Verified via registry hash • Issued by {AGENCY.name} HQ.
-                                </p>
-                            </div>
+                    <div className="flex justify-between items-center border-t border-black pt-6">
+                        <div className="max-w-[500px]">
+                            <h4 className="text-[10px] font-black uppercase mb-1">Important Notice:</h4>
+                            <p className="text-[8px] font-bold leading-tight uppercase">
+                                Computer generated document • Re-verify flight manifest 24h prior • Non-refundable post-issuance • Verified via system registry • Issued by Akbar Pura International HQ.
+                            </p>
                         </div>
-                        <div className="text-right border-l border-blue-800 pl-4">
-                            <p className="text-[7px] font-black text-blue-400 uppercase tracking-[0.3em] mb-0.5">Registry Fingerprint</p>
-                            <p className="text-[8px] font-mono text-white font-black">{booking.id.toUpperCase()}</p>
+                        <div className="text-right">
+                            <p className="text-[8px] font-black uppercase mb-0.5 tracking-widest">Document Hash</p>
+                            <p className="text-[9px] font-mono font-black">{booking.id.toUpperCase()}</p>
                         </div>
                     </div>
                 </div>

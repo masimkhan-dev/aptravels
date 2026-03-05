@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Tag, Calendar, User, ArrowRight, Loader2, DollarSign, X, Briefcase, Plane, FileText, Search, BookOpen } from "lucide-react";
+import { Plus, Tag, Calendar, User, ArrowRight, Loader2, DollarSign, X, Briefcase, Plane, FileText, Search, BookOpen, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -43,6 +43,7 @@ export default function AdminBookings() {
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedPackage, setSelectedPackage] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
+  const [margin, setMargin] = useState("");
   const [travelDate, setTravelDate] = useState("");
 
   // Ticket Specific Fields
@@ -128,6 +129,7 @@ export default function AdminBookings() {
       assigned_to: user?.id ?? null,
       booking_type: bookingType,
       total_price: Number(totalPrice),
+      margin: Number(margin) || 0,
       travel_date: travelDate || null,
       status: "Confirmed" as "Confirmed" | "Completed" | "Draft" | "Voided",
       ...(bookingType === "Package" ? { package_id: selectedPackage || null } :
@@ -158,6 +160,7 @@ export default function AdminBookings() {
     setSelectedCustomer("");
     setSelectedPackage("");
     setTotalPrice("");
+    setMargin("");
     setTravelDate("");
     setBookingType("Package");
     setPnrNumber("");
@@ -426,6 +429,13 @@ export default function AdminBookings() {
                       <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin (Admin Only)</label>
+                    <div className="relative">
+                      <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                      <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -453,6 +463,13 @@ export default function AdminBookings() {
                         <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
+                      <div className="relative">
+                        <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -469,11 +486,20 @@ export default function AdminBookings() {
                       <input placeholder="e.g. Driver / Electrician" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={visaProfession} onChange={e => setVisaProfession(e.target.value)} />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Service Fee / Visa Cost *</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Service Fee / Visa Cost *</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
+                      <div className="relative">
+                        <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -3,9 +3,8 @@ import { AGENCY } from "@/lib/constants";
 
 const stats = [
     { label: "Years of Experience", value: "10+" },
-    { label: "Happy Pilgrims", value: "5,000+" },
+    { label: "Happy Pilgrims", value: "Satisfied" },
     { label: "Trusted Travel Office", value: "Nowshera" },
-    { label: "Services Offered", value: "8+" },
 ];
 
 export default function AboutSection() {
@@ -22,9 +21,9 @@ export default function AboutSection() {
                         Who We Are
                     </p>
                     <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
-                        Serving Pilgrims Since 2014
+                        Serving Pilgrims Since 2019
                     </h2>
-                    <p className="text-muted-foreground mt-1" dir="rtl">دیانتداری کے ساتھ خدمت — ۲۰۱۴ سے</p>
+                    <p className="text-muted-foreground mt-1" dir="rtl">دیانتداری کے ساتھ خدمت — ۲۰۱۹ سے</p>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 max-w-6xl mx-auto items-center">
@@ -33,17 +32,19 @@ export default function AboutSection() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="grid grid-cols-2 gap-3 sm:gap-6 order-2 lg:order-1"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 order-2 lg:order-1"
                     >
                         {stats.map((s) => (
                             <div
                                 key={s.label}
-                                className="bg-card rounded-2xl border border-border p-5 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow"
+                                className="bg-card rounded-2xl border border-border p-5 sm:p-6 text-center shadow-sm hover:shadow-md transition-shadow flex flex-col justify-center items-center min-h-[140px]"
                             >
-                                <p className="font-display text-2xl sm:text-4xl font-bold text-gold mb-1">
+                                <p className="font-display text-3xl sm:text-4xl font-bold text-gold mb-2 leading-none">
                                     {s.value}
                                 </p>
-                                <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">{s.label}</p>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-black leading-tight max-w-[120px]">
+                                    {s.label}
+                                </p>
                             </div>
                         ))}
                     </motion.div>
@@ -60,7 +61,7 @@ export default function AboutSection() {
                         </h3>
                         <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
                             Akbar Pura International Travels & Tours has been serving people of
-                            Nowshera and nearby areas since 2014. We help families plan their Hajj
+                            Nowshera and nearby areas since 2019. We help families plan their Hajj
                             and Umrah trips, book airline tickets, and process visas — without the stress.
                         </p>
                         <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">

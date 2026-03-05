@@ -89,7 +89,7 @@ export default function AdminDashboard() {
     { label: "Gross Sales", value: `Rs ${stats?.total_sales.toLocaleString()}`, icon: DollarSign, color: "text-blue-500", bg: "bg-blue-500/10", desc: "Total Booked Value" },
     { label: "Cash Collected", value: `Rs ${stats?.total_collected.toLocaleString()}`, icon: Wallet, color: "text-green-500", bg: "bg-green-500/10", desc: "Realized Revenue" },
     { label: "Market Balance", value: `Rs ${stats?.total_balance.toLocaleString()}`, icon: TrendingUp, color: "text-gold", bg: "bg-gold/10", desc: "Pending Collections" },
-    { label: "Active Files", value: stats?.active_cases, icon: Users, color: "text-primary", bg: "bg-primary/10", desc: "Ongoing Operations" },
+    { label: "Net Profit", value: `Rs ${(stats as any)?.total_margin?.toLocaleString() || '0'}`, icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10", desc: "Total Revenue Margin" },
   ];
 
   return (

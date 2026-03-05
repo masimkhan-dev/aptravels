@@ -95,13 +95,12 @@ export default function AdminLayout() {
           } lg:translate-x-0 lg:static lg:z-auto`}
       >
         <div className="p-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-[1.5px] border-gold/50 flex items-center justify-center bg-transparent shadow-gold hover:scale-105 transition-transform relative">
-              <img src="/logo-main.png" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gold/50 flex items-center justify-center bg-transparent shadow-gold relative">
+              <img src="/logo-main.png" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 transition-transform hover:scale-110" />
             </div>
-            <div>
-              <p className="font-display text-sm font-bold leading-tight uppercase text-gold">Akbar Pura Travels</p>
-              <p className="text-xs text-secondary-foreground/60 uppercase tracking-widest font-black">{role || 'Staff'}</p>
+            <div className="text-center">
+              <p className="font-display text-sm font-black leading-tight uppercase text-gold tracking-tighter">Akbar Pura Travels</p>
             </div>
           </div>
         </div>
