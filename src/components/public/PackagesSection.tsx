@@ -48,7 +48,7 @@ export default function PackagesSection() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {packages?.map((pkg, i) => (
               <motion.div
                 key={pkg.id}
@@ -56,48 +56,55 @@ export default function PackagesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative group rounded-2xl bg-card gold-border shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-350 overflow-hidden"
+                className="relative flex flex-col h-full group rounded-2xl bg-card gold-border shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-350 overflow-hidden"
               >
                 {pkg.is_popular && (
-                  <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-3 py-1 rounded-full bg-gold-gradient text-secondary text-xs font-bold shadow-gold">
-                    <Star className="w-3 h-3" /> Popular
+                  <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-3 py-1.5 rounded-full bg-gold-gradient text-secondary text-[10px] font-black uppercase tracking-wider shadow-gold border border-white/20">
+                    <Star className="w-3 h-3 fill-current" /> Popular
                   </div>
                 )}
 
                 <div className="bg-hero-gradient p-6 pb-8">
-                  <h3 className="font-display text-xl font-bold text-primary-foreground mb-1">
+                  <h3 className="font-display text-xl font-bold text-primary-foreground mb-1 group-hover:text-gold transition-colors duration-300">
                     {pkg.title}
                   </h3>
-                  <div className="flex items-center gap-3 text-primary-foreground/60 text-sm">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" /> {pkg.destination}
+                  <div className="flex items-center gap-3 text-primary-foreground/60 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-gold" /> {pkg.destination}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {pkg.duration}
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-gold" /> {pkg.duration}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                    {pkg.description}
-                  </p>
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="flex-grow">
+                    <p className="text-muted-foreground text-sm mb-5 leading-relaxed">
+                      {pkg.description}
+                    </p>
 
-                  {pkg.inclusions && pkg.inclusions.length > 0 && (
-                    <ul className="space-y-1.5 mb-6">
-                      {pkg.inclusions.map((inc) => (
-                        <li key={inc} className="flex items-center gap-2 text-sm text-card-foreground">
-                          <Check className="w-3.5 h-3.5 text-gold flex-shrink-0" />
-                          {inc}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    {pkg.inclusions && pkg.inclusions.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-[10px] font-bold text-gold uppercase tracking-widest mb-3">What's Included</p>
+                        <ul className="space-y-2">
+                          {pkg.inclusions.map((inc) => (
+                            <li key={inc} className="flex items-center gap-2.5 text-sm text-card-foreground">
+                              <div className="w-4 h-4 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
+                                <Check className="w-2.5 h-2.5 text-gold" />
+                              </div>
+                              <span className="line-clamp-1">{inc}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="flex items-end justify-between pt-4 border-t border-border">
+                  <div className="flex items-center justify-between pt-6 border-t border-border mt-auto">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Price</p>
-                      <p className="font-display text-2xl font-bold text-gradient-gold">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Starting From</p>
+                      <p className="font-display text-2xl font-black text-gradient-gold tracking-tighter">
                         {formatPrice(pkg.price)}
                       </p>
                     </div>
@@ -105,7 +112,7 @@ export default function PackagesSection() {
                       href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Assalam-o-Alaikum Akbar Pura Travels! Mujhe ${pkg.title} package ki details chahiye.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-gold px-5 py-2.5 rounded-xl text-sm"
+                      className="btn-gold px-6 py-3 rounded-xl text-sm btn-active-scale"
                     >
                       Book Now
                     </a>

@@ -59,50 +59,53 @@ export default function Navbar() {
         : "py-4 md:py-6"
         }`}
     >
-      <div className={`mx-auto transition-all duration-500 ease-out ${scrolled ? "container max-w-6xl px-4 pointer-events-auto" : "container px-4"}`}>
+      <div className={`mx-auto transition-all duration-500 ease-out ${scrolled ? "container max-w-7xl px-4 pointer-events-auto" : "container px-4"}`}>
         <div className={`flex items-center justify-between transition-all duration-500 ${scrolled
-          ? "bg-black/50 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-full px-4 sm:px-6 md:px-8 py-2 md:py-3"
-          : "px-2 py-0"
+          ? "bg-black/60 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[2rem] px-6 md:px-10 py-3"
+          : "px-2 py-2"
           }`}>
-          <button onClick={() => handleNavClick("/", true)} className="flex items-center gap-3 group">
-            <div className={`rounded-full flex shrink-0 items-center justify-center bg-white/5 border border-white/10 shadow-lg overflow-hidden relative transition-all duration-500 group-hover:border-gold/60 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] ${scrolled ? "w-10 h-10 md:w-12 md:h-12" : "w-14 h-14 md:w-16 md:h-16"
+          <button onClick={() => handleNavClick("/", true)} className="flex items-center gap-4 group">
+            <div className={`rounded-2xl flex shrink-0 items-center justify-center bg-white/5 border border-white/10 shadow-2xl overflow-hidden relative transition-all duration-500 group-hover:border-gold/60 group-hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] ${scrolled ? "w-12 h-12" : "w-16 h-16 md:w-20 md:h-20"
               }`}>
-              <img src="/logo-main.png" alt="Akbar Pura Logo" className="w-[110%] h-[110%] object-cover mix-blend-multiply contrast-125 scale-110" />
+              <img src="/logo-main.png" alt="Akbar Pura Logo" className="w-[115%] h-[115%] object-cover mix-blend-multiply contrast-125 scale-110" />
             </div>
-            <div className="hidden sm:flex flex-col items-start text-left">
-              <p className={`font-display font-bold text-white leading-tight tracking-wide transition-all duration-500 ${scrolled ? "text-sm md:text-base" : "text-base md:text-lg"
+            <div className={`flex flex-col items-start text-left transition-all duration-500 ${scrolled ? "opacity-100" : "opacity-100"}`}>
+              <p className={`font-display font-black text-white leading-none tracking-tight transition-all duration-500 ${scrolled ? "text-base" : "text-xl md:text-2xl"
                 }`}>
                 Akbar Pura Int'l
               </p>
-              <p className={`text-gold tracking-[0.2em] uppercase font-medium transition-all duration-500 ${scrolled ? "text-[8px] md:text-[9px]" : "text-[10px]"
-                }`}>
-                Travels &amp; Tours
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="h-px w-4 bg-gold/50" />
+                <p className={`text-gold tracking-[0.25em] uppercase font-bold transition-all duration-500 ${scrolled ? "text-[8px]" : "text-[10px] md:text-[11px]"
+                  }`}>
+                  Travels &amp; Tours
+                </p>
+              </div>
             </div>
           </button>
 
           {/* Desktop */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <div className="hidden lg:flex items-center gap-10">
             {navLinks.map((l) => (
               l.isInternal ? (
                 <button
                   key={l.href}
                   onClick={() => handleNavClick(l.href, true)}
-                  className="group relative flex items-center gap-2 text-[13px] lg:text-[14px] font-medium tracking-wider text-white/80 hover:text-gold transition-colors duration-300 py-2"
+                  className="group relative flex items-center gap-2.5 text-[14px] font-bold tracking-widest text-white/70 hover:text-gold transition-all duration-300 py-3 uppercase"
                 >
-                  <l.icon className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+                  <l.icon className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:scale-110 group-hover:text-gold transition-all duration-300" />
                   {l.label}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] w-0 bg-gradient-to-r from-gold-light via-gold to-gold-dark rounded-full transition-all duration-300 group-hover:w-full shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
+                  <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-gold rounded-full transition-all duration-500 group-hover:w-full shadow-[0_0_12px_rgba(212,175,55,0.8)]" />
                 </button>
               ) : (
                 <Link
                   key={l.href}
                   to={l.href}
-                  className="group relative flex items-center gap-2 text-[13px] lg:text-[14px] font-medium tracking-wider text-white/80 hover:text-gold transition-colors duration-300 py-2"
+                  className="group relative flex items-center gap-2.5 text-[14px] font-bold tracking-widest text-white/70 hover:text-gold transition-all duration-300 py-3 uppercase"
                 >
-                  <l.icon className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+                  <l.icon className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:scale-110 group-hover:text-gold transition-all duration-300" />
                   {l.label}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] w-0 bg-gradient-to-r from-gold-light via-gold to-gold-dark rounded-full transition-all duration-300 group-hover:w-full shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
+                  <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-gold rounded-full transition-all duration-500 group-hover:w-full shadow-[0_0_12px_rgba(212,175,55,0.8)]" />
                 </Link>
               )
             ))}
@@ -111,7 +114,7 @@ export default function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden text-white hover:text-gold transition-colors p-2"
+            className="lg:hidden text-white hover:text-gold transition-colors p-3 bg-white/5 rounded-xl border border-white/10"
             aria-label="Toggle Menu"
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

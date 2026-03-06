@@ -64,33 +64,38 @@ const FlightBooking = () => {
             <Navbar />
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 overflow-hidden">
-                <div className="absolute inset-0 bg-hero-gradient opacity-[0.03]" />
+            <section className="relative pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden">
+                {/* Background Patterns */}
+                <div className="absolute inset-0 bg-secondary" />
+                <div className="absolute inset-0 bg-hero-gradient opacity-60" />
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109c0f?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+
                 <div className="container px-4 mx-auto relative z-10">
                     <div className="max-w-4xl mx-auto text-center">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.8 }}
                         >
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 mb-6 group cursor-default">
-                                <Plane className="w-4 h-4 text-gold" />
-                                <span className="section-label">International Flight Booking</span>
+                            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8 group cursor-default">
+                                <Plane className="w-4 h-4 text-gold animate-float" />
+                                <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">International Flight Booking</span>
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6 leading-tight">
-                                Book Flights with Ease – <br />
-                                <span className="text-gradient-gold">Discover Best Deals Worldwide</span>
+                            <h1 className="text-5xl md:text-7xl font-display font-black text-white mb-8 leading-[1.1] tracking-tight">
+                                Book Flights with <span className="text-gradient-gold">Confidence</span> –
+                                <span className="block mt-2">Discover Best Deals</span>
                             </h1>
-                            <p className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
-                                Planning your next trip? At Akbar Pura Travels, we provide a personalized booking experience to help you find the best flights at unbeatable prices. No complex systems—just direct, expert service.
+                            <p className="text-lg md:text-xl text-white/70 mb-12 leading-loose max-w-2xl mx-auto font-medium">
+                                Planning your next trip? At Akbar Pura Travels, we provide a personalized booking experience to help you find the best flights at unbeatable prices.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <a href="#booking-steps" className="btn-gold px-8 py-4 rounded-xl flex items-center gap-2">
-                                    Learn How to Book <ChevronRight className="w-4 h-4" />
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                                <a href="#booking-steps" className="btn-gold px-10 py-5 rounded-2xl flex items-center gap-3 text-base shadow-2xl hover:scale-105 active:scale-95 transition-all w-full sm:w-auto">
+                                    Learn How to Book <ChevronRight className="w-5 h-5" />
                                 </a>
-                                <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe International Flight ki details chahiye.")}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-xl border border-border font-bold hover:bg-muted transition-all">
-                                    Contact Specialist
+                                <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe International Flight ki details chahiye.")}`} target="_blank" rel="noopener noreferrer" className="btn-ghost-light px-10 py-5 rounded-2xl flex items-center gap-3 text-base backdrop-blur-md border-white/30 hover:bg-white/10 w-full sm:w-auto">
+                                    <Headphones className="w-5 h-5" /> Contact Specialist
                                 </a>
                             </div>
                         </motion.div>
@@ -99,30 +104,31 @@ const FlightBooking = () => {
             </section>
 
             {/* Features Grid */}
-            <section className="py-24 bg-muted/30">
+            <section className="py-24 md:py-32 bg-[#F8FAFC]">
                 <div className="container px-4 mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why Book Flights with Us?</h2>
-                        <div className="w-20 h-1 bg-gradient-gold mx-auto" />
+                    <div className="max-w-3xl mx-auto text-center mb-20">
+                        <p className="section-label mb-3">Why Choose Us</p>
+                        <h2 className="text-4xl md:text-5xl font-display font-black mb-6">Why Book Flights with Us?</h2>
+                        <div className="w-24 h-1.5 bg-gradient-gold mx-auto rounded-full" />
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
                         {features.map((feature, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="bg-card p-8 rounded-2xl border border-border hover-lift shadow-sm group"
+                                transition={{ delay: idx * 0.1, duration: 0.5 }}
+                                className="bg-card flex flex-col h-full p-10 rounded-3xl border border-gold/10 hover-lift shadow-card hover:shadow-card-hover group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:bg-gold transition-colors duration-500">
-                                    <div className="group-hover:text-white transition-colors duration-500">
+                                <div className="w-14 h-14 rounded-2xl bg-gold/5 flex items-center justify-center mb-8 border border-gold/20 group-hover:bg-gold-gradient group-hover:scale-110 group-hover:shadow-gold transition-all duration-500">
+                                    <div className="group-hover:text-secondary group-hover:scale-110 transition-all duration-500">
                                         {feature.icon}
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-muted-foreground leading-relaxed text-sm">
+                                <h3 className="text-2xl font-display font-bold mb-4 text-foreground leading-tight group-hover:text-gold transition-colors">{feature.title}</h3>
+                                <p className="text-muted-foreground leading-relaxed text-sm flex-grow">
                                     {feature.description}
                                 </p>
                             </motion.div>
@@ -132,88 +138,115 @@ const FlightBooking = () => {
             </section>
 
             {/* Booking Steps Section */}
-            <section id="booking-steps" className="py-24 overflow-hidden">
+            <section id="booking-steps" className="py-24 md:py-32 overflow-hidden bg-background">
                 <div className="container px-4 mx-auto">
-                    <div className="flex flex-col lg:flex-row items-center gap-16">
+                    <div className="flex flex-col lg:flex-row items-center gap-20">
                         <div className="lg:w-1/2">
-                            <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 leading-tight">
+                            <p className="section-label mb-4">The Process</p>
+                            <h2 className="text-4xl md:text-6xl font-display font-black mb-8 leading-[1.1] tracking-tight">
                                 How to Book <br />
                                 <span className="text-gradient-gold">Your Next Flight?</span>
                             </h2>
-                            <p className="text-muted-foreground mb-8">
-                                Booking your flight with Akbar Pura Travels is a breeze! Follow these simple steps to secure your next adventure.
+                            <p className="text-lg text-muted-foreground mb-12 leading-loose">
+                                Booking your flight with Akbar Pura Travels is designed to be effortless. We handle the complexity while you enjoy the journey.
                             </p>
 
-                            <div className="space-y-8">
+                            <div className="space-y-12 relative">
+                                {/* Vertical line for timeline look on desktop */}
+                                <div className="hidden sm:block absolute left-6 top-4 bottom-4 w-px bg-gold/20" />
+
                                 {steps.map((step, idx) => (
-                                    <div key={idx} className="flex gap-4 group">
-                                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center font-bold text-gold border border-gold/20 group-hover:bg-gold group-hover:text-white transition-all duration-300">
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: idx * 0.15 }}
+                                        className="flex gap-8 group relative z-10"
+                                    >
+                                        <div className="flex-shrink-0 w-12 h-12 rounded-full bg-card shadow-lg flex items-center justify-center font-black text-gold border-2 border-gold/30 group-hover:border-gold group-hover:bg-gold-gradient group-hover:text-secondary transition-all duration-500 scale-110 sm:scale-100">
                                             {idx + 1}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-lg mb-1">{step.title}</h4>
-                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                            <h4 className="font-display font-bold text-xl mb-2 text-foreground">{step.title}</h4>
+                                            <p className="text-base text-muted-foreground leading-relaxed">
                                                 {step.description}
                                             </p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="lg:w-1/2 relative">
-                            <div className="absolute -inset-4 bg-gradient-gold opacity-10 blur-3xl rounded-full" />
-                            <div className="relative bg-card rounded-3xl border border-border p-8 shadow-2xl">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-                                        <ShieldCheck className="w-6 h-6" />
+                        <div className="lg:w-1/2 relative mt-12 lg:mt-0">
+                            <div className="absolute -inset-10 bg-gold-gradient opacity-10 blur-[80px] rounded-full" />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                className="relative bg-card rounded-[2.5rem] border border-gold/20 p-10 md:p-14 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] gold-border"
+                            >
+                                <div className="flex items-center gap-5 mb-10 pb-10 border-b border-border">
+                                    <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600 border border-green-500/20">
+                                        <ShieldCheck className="w-8 h-8" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold">Verified & Secure</h3>
-                                        <p className="text-xs text-muted-foreground">Certified IATA Partner Agency</p>
+                                        <h3 className="font-display font-bold text-2xl text-foreground tracking-tight">Verified & Secure</h3>
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Authorized Travel Partner</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
-                                        <div className="h-4 w-3/4 bg-border/50 rounded animate-pulse" />
-                                        <div className="h-4 w-1/2 bg-border/50 rounded animate-pulse" />
+                                <div className="space-y-6">
+                                    <div className="p-6 rounded-2xl bg-muted/30 border border-gold/10 space-y-4">
+                                        <div className="h-3.5 w-full bg-border/40 rounded-full animate-pulse" />
+                                        <div className="h-3.5 w-[85%] bg-border/40 rounded-full animate-pulse" />
+                                        <div className="h-3.5 w-[70%] bg-border/40 rounded-full animate-pulse" />
                                     </div>
-                                    <div className="p-6 rounded-2xl bg-gold-gradient text-secondary font-bold text-center shadow-gold hover:opacity-95 transition-opacity cursor-pointer">
+                                    <div className="p-6 rounded-2xl bg-gold-gradient text-secondary font-black text-center shadow-gold hover:opacity-95 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-lg tracking-tight uppercase">
                                         <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe flight booking ke liye help chahiye.")}`} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                            Contact on WhatsApp to Book
+                                            Book on WhatsApp
                                         </a>
                                     </div>
-                                    <p className="text-[10px] text-center text-muted-foreground">
-                                        * Terms and conditions apply. Prices are subject to availability.
+                                    <p className="text-[11px] font-medium text-center text-muted-foreground/60 leading-relaxed italic">
+                                        * Prices are subject to airline availability at the time of confirmation.
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* CTA Section */}
-            <section className="py-20">
+            <section className="py-24 md:py-32">
                 <div className="container px-4 mx-auto">
-                    <div className="bg-hero-gradient rounded-3xl p-12 text-center text-white relative overflow-hidden shadow-2xl">
-                        <div className="absolute top-0 right-0 p-8 opacity-10">
-                            <Plane className="w-64 h-64 -rotate-12" />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        className="bg-hero-gradient rounded-[3rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-[0_45px_100px_-20px_rgba(15,23,42,0.4)]"
+                    >
+                        {/* Decorative background elements */}
+                        <div className="absolute top-0 right-0 p-12 opacity-[0.05] -translate-y-1/4 translate-x-1/4 pointer-events-none">
+                            <Plane className="w-[400px] h-[400px] -rotate-[15deg]" />
                         </div>
-                        <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 relative z-10">Ready to Take Off?</h2>
-                        <p className="text-white/80 mb-10 max-w-2xl mx-auto relative z-10">
-                            Don't miss out on our exclusive early-bird offers. Contact our travel specialists today for a personalized quote.
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
-                            <a href={PHONE_URL} className="btn-gold px-10 py-4 rounded-xl text-lg">
-                                Call Now: {AGENCY.phones[0]}
-                            </a>
-                            <a href="#contact" className="btn-ghost-light px-10 py-4 rounded-xl text-lg backdrop-blur-sm">
-                                Send Inquiry
-                            </a>
+                        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-gold blur-[140px] opacity-20" />
+
+                        <div className="relative z-10 max-w-3xl mx-auto">
+                            <p className="text-gold font-bold uppercase tracking-[0.3em] text-xs mb-6">Adventure Awaits</p>
+                            <h2 className="text-4xl md:text-7xl font-display font-black mb-10 leading-[1.1] tracking-tight">Ready to Take Off?</h2>
+                            <p className="text-xl text-white/70 mb-14 leading-relaxed max-w-xl mx-auto font-medium">
+                                Don't miss out on our exclusive deals. Contact our specialists today for a personalized quote.
+                            </p>
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                                <a href={PHONE_URL} className="btn-gold px-12 py-5 rounded-2xl text-lg w-full sm:w-auto shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                                    Call Now: {AGENCY.phones[0]}
+                                </a>
+                                <a href="#contact" className="btn-ghost-light px-12 py-5 rounded-2xl text-lg w-full sm:w-auto backdrop-blur-md border-white/40 hover:bg-white/10 active:scale-95 transition-all">
+                                    Send Inquiry
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 

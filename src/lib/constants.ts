@@ -1,6 +1,6 @@
 export const AGENCY = {
   name: "Akbar Pura International Travels & Tours",
-  tagline: "Certified Hajj, Umrah & Visa Consultants — Trusted by Thousands Across KPK Since 2014",
+  tagline: "Trusted by Thousands Across KPK Since 2019",
   contact: "Shahab Khan",
   phones: ["03163050602", "03489489689", "03009040892"],
   whatsapp: "923163050602",

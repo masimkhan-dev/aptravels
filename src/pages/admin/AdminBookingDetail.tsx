@@ -213,6 +213,30 @@ export default function AdminBookingDetail() {
     const totalPaid = payments.filter(p => !p.voided).reduce((s, p) => s + p.amount_paid, 0);
     const balance = (booking?.total_price || 0) - totalPaid;
 
+    // --- 💎 INVOICE THEME SYSTEM (Dubai-Grade Architecture) ---
+    const BRAND = {
+        primary: "yellow-500",
+        primaryDark: "yellow-600",
+        primaryLight: "yellow-100",
+        border: "border-slate-950",
+        bgHeader: "bg-slate-50",
+        textTitle: "text-slate-950",
+        textBody: "text-gray-800"
+    };
+
+    const validPayments = payments.filter(p => !p.voided);
+    const invoiceNumber = booking?.invoice_no || `APT-${booking?.id.slice(0, 6).toUpperCase()}`;
+    const verificationCode = `APT-${booking?.id.slice(0, 8).toUpperCase()}`;
+
+    // Status Badge Logic
+    const paymentStatusBadge = balance <= 0 ? (
+        <span className="px-4 py-1.5 bg-green-500 text-white font-black text-xs rounded-lg uppercase tracking-widest shadow-sm">Fully Paid</span>
+    ) : totalPaid > 0 ? (
+        <span className="px-4 py-1.5 bg-amber-500 text-white font-black text-xs rounded-lg uppercase tracking-widest shadow-sm">Partially Paid</span>
+    ) : (
+        <span className="px-4 py-1.5 bg-red-500 text-white font-black text-xs rounded-lg uppercase tracking-widest shadow-sm">Unpaid</span>
+    );
+
     // Visa Progress Calculation
     const visaSteps = [
         { key: 'visa_step_passport_received', label: 'Passport Received' },
@@ -804,72 +828,88 @@ export default function AdminBookingDetail() {
 
                 <div className="invoice-container">
                     {/* --- 🔳 TOP BORDER --- */}
-                    <div className="h-1 w-full bg-black mb-6" />
+                    <div className={`h-1.5 w-full bg-gradient-to-r from-${BRAND.primary} via-amber-500 to-${BRAND.primaryDark} mb-6`} />
 
-                    {/* --- 🔳 HEADER SECTION --- */}
-                    <div className="flex justify-between items-start mb-8 p-0">
-                        <div className="flex items-center gap-6">
-                            <img src="/logo-main.png" alt="Logo" className="h-[80px] w-auto object-contain grayscale" />
-                            <div>
-                                <h1 className="text-xl font-black text-black leading-none mb-1 uppercase tracking-tight">
-                                    {AGENCY.name}
-                                </h1>
-                                <p className="text-[9px] font-bold text-black uppercase tracking-widest leading-none mb-4">{AGENCY.tagline}</p>
-                                <div className="text-[9px] text-black space-y-1">
-                                    <p>Address: {AGENCY.address}</p>
-                                    <p>Phone: {AGENCY.phones.join(' | ')}</p>
-                                    <p>Email: {AGENCY.email}</p>
-                                </div>
+                    {/* --- 🔳 HEADER SECTION (GRID BASED FOR PRINT STABILITY) --- */}
+                    <div className="grid grid-cols-3 items-start mb-8 p-0 gap-4">
+                        {/* Company Identity */}
+                        <div className="text-left col-span-1">
+                            <h1 className="text-lg font-black text-black leading-tight mb-2 uppercase tracking-tight">
+                                {AGENCY.name}
+                            </h1>
+                            <div className="text-[8px] text-black space-y-0.5 font-medium">
+                                <p className="opacity-70">HEAD OFFICE</p>
+                                <p>{AGENCY.address}</p>
+                                <p>{AGENCY.phones.join(' / ')}</p>
+                                <p>{AGENCY.email}</p>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <h2 className="text-2xl font-black uppercase tracking-widest mb-1">INVOICE</h2>
-                            <p className="text-sm font-bold font-mono">#{booking.invoice_no}</p>
-                            <p className="text-[10px] mt-2 font-bold">DATE: {new Date().toLocaleDateString('en-GB')}</p>
+
+                        {/* Branding & Logo */}
+                        <div className="flex flex-col items-center justify-center col-span-1">
+                            <div className="w-28 h-28 rounded-full shadow-2xl flex items-center justify-center bg-white overflow-hidden p-3 mb-2">
+                                <img
+                                    src="/logo-main.png"
+                                    alt="Agency Logo"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                            {paymentStatusBadge}
+                        </div>
+
+                        {/* Invoice Meta */}
+                        <div className="text-right col-span-1">
+                            <h2 className={`text-3xl font-black uppercase tracking-widest mb-1 ${BRAND.textTitle}`}>INVOICE</h2>
+                            <p className="text-md font-black font-mono">#{invoiceNumber}</p>
+                            <p className="text-[10px] mt-2 font-bold uppercase tracking-widest">Date: {new Date().toLocaleDateString('en-GB')}</p>
+                            <div className="mt-4 pt-2 border-t border-gray-200">
+                                <p className="text-[8px] font-bold text-gray-500 uppercase">Verification Code</p>
+                                <p className="text-[10px] font-mono font-black">{verificationCode}</p>
+                            </div>
                         </div>
                     </div>
 
                     {/* --- 🔳 INFO CARDS --- */}
                     <div className="grid grid-cols-2 gap-8 mb-8">
                         {/* Bill To */}
-                        <div className="p-0 border-t-2 border-black pt-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4">CLIENT INFORMATION</h3>
+                        <div className={`p-0 border-t-2 ${BRAND.border} pt-4`}>
+                            <h3 className={`text-[10px] font-black uppercase tracking-[1px] mb-4 ${BRAND.textTitle}`}>CLIENT INFORMATION</h3>
                             <div className="space-y-2 text-[10px]">
                                 <p className="flex justify-between items-center"><span className="font-bold">NAME:</span> <span className="font-black uppercase">{booking.customers.full_name}</span></p>
-                                <p className="flex justify-between items-center"><span className="font-bold">ID/PASSPORT:</span> <span className="font-mono font-bold">{booking.customers.cnic_passport || '---'}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">ID / PASSPORT:</span> <span className="font-mono font-bold">{booking.customers.cnic_passport || '---'}</span></p>
                                 <p className="flex justify-between items-center"><span className="font-bold">PHONE:</span> <span className="font-black">{booking.customers.phone}</span></p>
                             </div>
                         </div>
 
                         {/* Booking details */}
-                        <div className="p-0 border-t-2 border-black pt-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4">SERVICE SUMMARY</h3>
+                        <div className={`p-0 border-t-2 ${BRAND.border} pt-4`}>
+                            <h3 className={`text-[10px] font-black uppercase tracking-[1px] mb-4 ${BRAND.textTitle}`}>SERVICE SUMMARY</h3>
                             <div className="space-y-2 text-[10px]">
-                                <p className="flex justify-between items-center"><span className="font-bold">SERVICE:</span> <span className="font-black uppercase border border-black px-2">{booking.booking_type}</span></p>
-                                <p className="flex justify-between items-center"><span className="font-bold">FILE ID:</span> <span className="font-mono font-bold uppercase">{booking.id.slice(0, 8)}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">SERVICE:</span> <span className={`font-black uppercase border ${BRAND.border} px-2 bg-slate-50`}>{booking.booking_type}</span></p>
+                                <p className="flex justify-between items-center"><span className="font-bold">FILE ID:</span> <span className="font-mono font-bold uppercase">{booking.id.slice(0, 8).toUpperCase()}</span></p>
                                 <p className="flex justify-between items-center"><span className="font-bold">TRAVEL DATE:</span> <span className="font-black">{booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-GB') : 'PENDING'}</span></p>
                             </div>
                         </div>
                     </div>
 
                     {/* --- 🔳 SERVICE TABLE --- */}
-                    <div className="mb-6 overflow-hidden border border-black">
+                    <div className={`mb-6 overflow-hidden border ${BRAND.border}`}>
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="border-b border-black text-[9px] font-black uppercase">
+                                <tr className={`border-b ${BRAND.border} text-[9px] font-black uppercase ${BRAND.bgHeader} ${BRAND.textBody}`}>
                                     <th className="p-3 text-left">SERVICE / ITEM</th>
                                     <th className="p-3 text-left">SECTOR / COUNTRY</th>
-                                    <th className="p-3 text-left">AIRLINE / JOB</th>
+                                    <th className="p-3 text-left">AIRLINE / JOB TITLE</th>
                                     <th className="p-3 text-center">TRAVEL DATE</th>
                                 </tr>
                             </thead>
                             <tbody className="text-[10px]">
-                                <tr className="border-b border-black">
+                                <tr className={`border-b ${BRAND.border}`}>
                                     <td className="p-3 font-black uppercase">
                                         {booking.booking_type}
                                     </td>
                                     <td className="p-3 font-bold uppercase">
-                                        {booking.booking_type === 'Ticket' ? (booking.ticket_sector || '-') : (booking.visa_country || '-')}
+                                        {booking.booking_type === 'Ticket' ? (booking.ticket_sector || '-') : (booking.visa_country === 'SAUDI ARABI' || booking.visa_country === 'SAUDIA ARABI' ? 'SAUDI ARABIA' : booking.visa_country || '-')}
                                     </td>
                                     <td className="p-3 font-bold uppercase">
                                         {booking.booking_type === 'Ticket' ? (booking.airline_name || '-') : (booking.visa_profession || '-')}
@@ -882,26 +922,26 @@ export default function AdminBookingDetail() {
                         </table>
                     </div>
 
-                    <div className="mb-8 overflow-hidden border border-black">
+                    <div className={`mb-8 overflow-hidden border ${BRAND.border}`}>
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="border-b border-black text-[9px] font-black uppercase">
+                                <tr className={`border-b ${BRAND.border} text-[9px] font-black uppercase ${BRAND.bgHeader} ${BRAND.textBody}`}>
                                     <th className="p-2 text-left">PAYMENT DATE</th>
                                     <th className="p-2 text-left">METHOD</th>
                                     <th className="p-2 text-right">AMOUNT (PKR)</th>
                                 </tr>
                             </thead>
                             <tbody className="text-[10px]">
-                                {payments.filter(p => !p.voided).map((p) => (
-                                    <tr key={p.id} className="border-b border-black">
+                                {validPayments.map((p) => (
+                                    <tr key={p.id} className={`border-b ${BRAND.border}`}>
                                         <td className="px-3 py-2 font-bold">{new Date(p.payment_date).toLocaleDateString('en-GB')}</td>
                                         <td className="px-3 py-2 font-black uppercase">{p.payment_method}</td>
-                                        <td className="px-3 py-2 text-right font-black">Rs {p.amount_paid.toLocaleString()}</td>
+                                        <td className="px-3 py-2 text-right font-black font-mono">PKR {p.amount_paid.toLocaleString()}</td>
                                     </tr>
                                 ))}
-                                {payments.filter(p => !p.voided).length === 0 && (
+                                {validPayments.length === 0 && (
                                     <tr>
-                                        <td colSpan={3} className="py-6 text-center italic font-black text-xs uppercase tracking-widest">No payments recorded.</td>
+                                        <td colSpan={3} className="py-6 text-center italic font-black text-xs uppercase tracking-widest text-gray-400">No payments recorded in history.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -910,49 +950,48 @@ export default function AdminBookingDetail() {
 
                     <div className="grid grid-cols-2 gap-12 mt-auto mb-8 items-end p-0">
                         {/* Summary */}
-                        <div className="space-y-2 border-t-2 border-black pt-4">
+                        <div className={`space-y-2 border-t-2 ${BRAND.border} pt-4`}>
                             <div className="flex justify-between items-center text-[10px]">
                                 <span className="font-bold uppercase tracking-tight">Total Quote Value:</span>
-                                <span className="font-black">Rs {Number(booking.total_price).toLocaleString()}</span>
+                                <span className="font-black">PKR {Number(booking.total_price).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center text-[10px]">
-                                <span className="font-bold uppercase tracking-tight">Total Amount Received:</span>
-                                <span className="font-black">Rs {totalPaid.toLocaleString()}</span>
+                                <span className="font-bold uppercase tracking-tight text-emerald-600">Total Received So Far:</span>
+                                <span className="font-black text-emerald-600">PKR {totalPaid.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between items-center pt-2 border-t border-black">
+                            <div className={`flex justify-between items-center pt-2 border-t ${BRAND.border}`}>
                                 <span className="text-[12px] font-black uppercase">REMAINING BALANCE:</span>
-                                <span className="text-xl font-black">Rs {balance.toLocaleString()}</span>
+                                <span className={`text-xl font-black ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                                    PKR {balance.toLocaleString()}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Signatures */}
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="text-center relative">
-                                <div className="border-t border-black mt-16 pt-2">
+                        {/* Signatures & Stamp Area */}
+                        <div className="grid grid-cols-2 gap-8 text-center items-end">
+                            <div className="relative">
+                                {/* Digital Watermark/Stamp Area */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none -mt-4">
+                                    <div className={`w-24 h-24 border-4 ${BRAND.border} rounded-full flex items-center justify-center rotate-12`}>
+                                        <span className="text-[10px] font-black uppercase tracking-tight leading-none px-2">{AGENCY.name.slice(0, 15)}...</span>
+                                    </div>
+                                </div>
+                                <div className={`border-t ${BRAND.border} mt-16 pt-2`}>
                                     <p className="text-[9px] font-black uppercase">Customer Signature</p>
                                 </div>
                             </div>
-                            <div className="text-center relative">
-                                <div className="border-t border-black mt-16 pt-2">
-                                    <p className="text-[9px] font-black uppercase">Authorized Agent</p>
-                                    <p className="text-[7px] font-bold mt-1 uppercase">Akbar Pura International</p>
+                            <div className="relative">
+                                <div className={`border-t ${BRAND.border} mt-16 pt-2`}>
+                                    <p className="text-[9px] font-black uppercase">Authorize Signature</p>
+                                    <p className="text-[6px] text-gray-400 mt-1 uppercase italic">(Official Stamp Required)</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* --- 🔳 COMPLIANCE FOOTER --- */}
-                    <div className="flex justify-between items-center border-t border-black pt-6">
-                        <div className="max-w-[500px]">
-                            <h4 className="text-[10px] font-black uppercase mb-1">Important Notice:</h4>
-                            <p className="text-[8px] font-bold leading-tight uppercase">
-                                Computer generated document • Re-verify flight manifest 24h prior • Non-refundable post-issuance • Verified via system registry • Issued by Akbar Pura International HQ.
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[8px] font-black uppercase mb-0.5 tracking-widest">Document Hash</p>
-                            <p className="text-[9px] font-mono font-black">{booking.id.toUpperCase()}</p>
-                        </div>
+                    {/* --- 🔳 FOOTER DIVIDER & MESSAGE --- */}
+                    <div className={`mt-6 border-t ${BRAND.border} pt-3 text-[10px] text-gray-500 text-center font-bold uppercase tracking-widest`}>
+                        Thank you for choosing Akbar Pura International Travels & Tours
                     </div>
                 </div>
             </div>

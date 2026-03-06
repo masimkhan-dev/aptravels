@@ -4,48 +4,81 @@ import { FACEBOOK_URL, WHATSAPP_URL } from "@/lib/constants";
 
 export default function Footer() {
   return (
-    <footer className="relative bg-secondary text-secondary-foreground py-14 border-t border-gold/20 overflow-hidden">
-      <div className="absolute inset-0 bg-hero-gradient opacity-30" />
+    <footer className="relative bg-secondary text-secondary-foreground py-20 border-t border-gold/10 overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute inset-0 bg-hero-gradient opacity-20" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+
       <div className="relative z-10 container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-5 group cursor-default">
-            <div className="w-14 h-14 rounded-full bg-gold-gradient flex items-center justify-center shadow-gold group-hover:scale-110 transition-transform duration-300">
-              <Plane className="w-7 h-7 text-secondary" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
+          {/* Logo & Info */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+            <div className="flex items-center gap-4 group cursor-default">
+              <div className="w-16 h-16 rounded-2xl bg-gold-gradient flex items-center justify-center shadow-gold group-hover:scale-110 transition-all duration-500 border border-white/20">
+                <Plane className="w-8 h-8 text-secondary group-hover:rotate-12 transition-transform" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="font-display text-xl md:text-2xl font-black leading-none tracking-tight">
+                  {AGENCY.name}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="h-0.5 w-6 bg-gold" />
+                  <p className="text-[10px] text-secondary-foreground/50 uppercase tracking-[0.2em] font-bold">
+                    EST. 2019
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-display text-lg font-bold leading-tight tracking-wide">
-                {AGENCY.name}
-              </p>
-              <p className="text-[11px] text-secondary-foreground/60 tracking-wider">
-                {AGENCY.tagline}
-              </p>
-            </div>
+            <p className="text-sm text-secondary-foreground/60 leading-relaxed max-w-xs italic">
+              {AGENCY.tagline}
+            </p>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-3">
-            <div className="flex items-center gap-5">
+          {/* Quick Links / Social Headline */}
+          <div className="flex flex-col items-center text-center space-y-6">
+            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-gold">Follow Our Journey</h4>
+            <div className="flex items-center gap-6">
               <a
                 href={FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-11 h-11 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-secondary-foreground/50 hover:text-gold hover:bg-gold/10 hover:border-gold/30 hover:shadow-gold-sm hover:-translate-y-1 transition-all duration-300"
+                className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-secondary-foreground/40 hover:text-gold hover:bg-gold/10 hover:border-gold/40 hover:shadow-gold hover:-translate-y-2 transition-all duration-500 group"
                 aria-label="Facebook"
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className="w-6 h-6 group-hover:scale-110" />
               </a>
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-11 h-11 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-secondary-foreground/50 hover:text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]/30 hover:shadow-[0_4px_16px_rgba(37,211,102,0.3)] hover:-translate-y-1 transition-all duration-300"
+                className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-secondary-foreground/40 hover:text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]/40 hover:shadow-[0_8px_32px_rgba(37,211,102,0.3)] hover:-translate-y-2 transition-all duration-500 group"
                 aria-label="WhatsApp"
               >
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-6 h-6 group-hover:scale-110" />
               </a>
             </div>
-            <p className="text-[11px] text-secondary-foreground/40 uppercase tracking-[0.15em] font-medium">
-              © {new Date().getFullYear()} {AGENCY.name}
-            </p>
+          </div>
+
+          {/* Contact Summary */}
+          <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-4">
+            <div className="p-1 px-4 rounded-full bg-gold/10 border border-gold/20">
+              <p className="text-[10px] font-black uppercase tracking-widest text-gold">Reach Out</p>
+            </div>
+            <p className="text-sm font-medium text-secondary-foreground/80 hover:text-gold transition-colors">{AGENCY.email}</p>
+            <p className="text-sm font-medium text-secondary-foreground/80">{AGENCY.phones[0]}</p>
+            <p className="text-[11px] text-secondary-foreground/40 font-medium">{AGENCY.address}</p>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">
+            © {new Date().getFullYear()} {AGENCY.name} — All Rights Reserved
+          </p>
+          <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest">
+            <span className="hover:text-gold transition-colors cursor-pointer">Privacy Policy</span>
+            <div className="w-1 h-1 rounded-full bg-gold/50" />
+            <span className="hover:text-gold transition-colors cursor-pointer">Terms of Service</span>
           </div>
         </div>
       </div>
