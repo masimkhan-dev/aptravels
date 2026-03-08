@@ -1,13 +1,28 @@
 import { motion } from "framer-motion";
 import { AGENCY } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
-const stats = [
+const DEFAULT_STATS = [
     { label: "Years of Experience", value: "10+" },
     { label: "Happy Pilgrims", value: "Satisfied" },
     { label: "Trusted Travel Office", value: "Nowshera" },
 ];
 
+const DEFAULT_FEATURES = [
+    "Clear and honest pricing",
+    "Personal support at every step",
+    "Complete documentation assistance",
+    "Friendly and experienced staff",
+];
+
 export default function AboutSection() {
+    const { data: aboutData } = useSiteSettings("about_section");
+
+    const title = aboutData?.title || "Serving Pilgrims Since 2019";
+    const description = aboutData?.description || `Akbar Pura International Travels & Tours has been serving people of Nowshera and nearby areas since 2019. We help families plan their Hajj and Umrah trips, book airline tickets, and process visas — without the stress.`;
+    const stats = aboutData?.stats || DEFAULT_STATS;
+    const features = aboutData?.features || DEFAULT_FEATURES;
+
     return (
         <section id="about" className="py-20 md:py-28 bg-[#F9FAFB]">
             <div className="container mx-auto px-4">
@@ -21,7 +36,7 @@ export default function AboutSection() {
                         Who We Are
                     </p>
                     <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-                        Serving Pilgrims Since 2019
+                        {title}
                     </h2>
                     <p className="text-muted-foreground mt-2 italic text-sm md:text-base opacity-80" dir="rtl">دیانتداری کے ساتھ خدمت — ۲۰۱۹ سے</p>
                 </motion.div>
@@ -38,10 +53,8 @@ export default function AboutSection() {
                             <h3 className="font-display text-3xl font-bold text-foreground border-l-4 border-gold pl-5">
                                 {AGENCY.name}
                             </h3>
-                            <p className="text-muted-foreground leading-loose text-base md:text-lg">
-                                Akbar Pura International Travels & Tours has been serving people of
-                                Nowshera and nearby areas since 2019. We help families plan their Hajj
-                                and Umrah trips, book airline tickets, and process visas — without the stress.
+                            <p className="text-muted-foreground leading-loose text-base md:text-lg whitespace-pre-line">
+                                {description}
                             </p>
                         </div>
 
@@ -60,12 +73,7 @@ export default function AboutSection() {
 
                         {/* Feature Checklist */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 mt-4 border-t border-border/60">
-                            {[
-                                "Clear and honest pricing",
-                                "Personal support at every step",
-                                "Complete documentation assistance",
-                                "Friendly and experienced staff",
-                            ].map((point) => (
+                            {features.map((point: string) => (
                                 <div key={point} className="flex items-center gap-3 group">
                                     <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-gold-gradient transition-all duration-300">
                                         <span className="text-gold group-hover:text-secondary text-xs font-bold leading-none">✔</span>

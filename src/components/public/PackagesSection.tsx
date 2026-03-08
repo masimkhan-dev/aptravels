@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getPackages } from "@/integrations/supabase/packages";
 import { MapPin, Clock, Check, Star, Loader2 } from "lucide-react";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { AGENCY, WHATSAPP_URL } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface Package {
   id: string;
@@ -16,11 +17,15 @@ interface Package {
 }
 
 export default function PackagesSection() {
+  const { data: contactData } = useSiteSettings("contact_info");
   const { data: packages, isLoading } = useQuery({
     queryKey: ["packages", "public"],
     queryFn: getPackages,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const whatsappNumber = contactData?.whatsapp || AGENCY.whatsapp;
+  const dynamicWhatsappUrl = `https://wa.me/${whatsappNumber}`;
 
   const formatPrice = (p: number) =>
     new Intl.NumberFormat("en-PK", { style: "currency", currency: "PKR", maximumFractionDigits: 0 }).format(p);
@@ -109,7 +114,7 @@ export default function PackagesSection() {
                       </p>
                     </div>
                     <a
-                      href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Assalam-o-Alaikum Akbar Pura Travels! Mujhe ${pkg.title} package ki details chahiye.`)}`}
+                      href={`${dynamicWhatsappUrl}?text=${encodeURIComponent(`Assalam-o-Alaikum Akbar Pura Travels! Mujhe ${pkg.title} package ki details chahiye.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-gold px-6 py-3 rounded-xl text-sm btn-active-scale"

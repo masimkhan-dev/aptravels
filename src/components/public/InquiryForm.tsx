@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { AGENCY } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -19,8 +20,15 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export default function InquiryForm() {
+  const { data: contactData } = useSiteSettings("contact_info");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const agencyName = contactData?.agencyName || AGENCY.name;
+  const tagline = contactData?.tagline || AGENCY.tagline;
+  const address = contactData?.address || AGENCY.address;
+  const phones = contactData?.phones || AGENCY.phones;
+  const email = contactData?.email || AGENCY.email;
 
   const {
     register,
@@ -89,9 +97,9 @@ export default function InquiryForm() {
           >
             <div className="border-l-4 border-gold pl-6">
               <h3 className="font-display text-3xl font-bold text-foreground mb-3">
-                {AGENCY.name}
+                {agencyName}
               </h3>
-              <p className="text-muted-foreground leading-relaxed italic">{AGENCY.tagline}</p>
+              <p className="text-muted-foreground leading-relaxed italic">{tagline}</p>
             </div>
 
             <div className="space-y-6">
@@ -101,7 +109,7 @@ export default function InquiryForm() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Our Location</p>
-                  <p className="text-foreground font-medium">{AGENCY.address}</p>
+                  <p className="text-foreground font-medium">{address}</p>
                 </div>
               </div>
 
@@ -112,7 +120,7 @@ export default function InquiryForm() {
                 <div>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Call Us Directly</p>
                   <div className="space-y-1">
-                    {AGENCY.phones.map((p) => (
+                    {phones.map((p: string) => (
                       <a key={p} href={`tel:${p}`} className="block text-foreground font-medium hover:text-gold transition-colors">
                         {p}
                       </a>
@@ -127,8 +135,8 @@ export default function InquiryForm() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Email Support</p>
-                  <a href={`mailto:${AGENCY.email}`} className="text-foreground font-medium hover:text-gold transition-colors">
-                    {AGENCY.email}
+                  <a href={`mailto:${email}`} className="text-foreground font-medium hover:text-gold transition-colors">
+                    {email}
                   </a>
                 </div>
               </div>

@@ -2,9 +2,19 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Phone, ArrowUp, Facebook } from "lucide-react";
 import { WHATSAPP_URL, PHONE_URL, FACEBOOK_URL } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { AGENCY } from "@/lib/constants";
 
 export default function FloatingButtons() {
+  const { data: contactData } = useSiteSettings("contact_info");
   const [showScroll, setShowScroll] = useState(false);
+
+  const facebook = contactData?.facebook || FACEBOOK_URL;
+  const whatsappNumber = contactData?.whatsapp || AGENCY.whatsapp;
+  const phone = contactData?.phones?.[0] || AGENCY.phones[0];
+
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+  const phoneUrl = `tel:${phone}`;
 
   useEffect(() => {
     const onScroll = () => setShowScroll(window.scrollY > 400);
@@ -29,7 +39,7 @@ export default function FloatingButtons() {
       </AnimatePresence>
 
       <a
-        href={FACEBOOK_URL}
+        href={facebook}
         target="_blank"
         rel="noopener noreferrer"
         className="w-12 h-12 rounded-full bg-[#1877F2] text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
@@ -39,14 +49,14 @@ export default function FloatingButtons() {
       </a>
 
       <a
-        href={PHONE_URL}
+        href={phoneUrl}
         className="w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
       >
         <Phone className="w-5 h-5" />
       </a>
 
       <motion.a
-        href={WHATSAPP_URL}
+        href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
         animate={{ scale: [1, 1.1, 1] }}

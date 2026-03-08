@@ -5,8 +5,18 @@ import Footer from "@/components/public/Footer";
 import FloatingButtons from "@/components/public/FloatingButtons";
 import InquiryForm from "@/components/public/InquiryForm";
 import { AGENCY, PHONE_URL, WHATSAPP_URL } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const FlightBooking = () => {
+    const { data: contactData } = useSiteSettings("contact_info");
+
+    const agencyName = contactData?.agencyName || AGENCY.name;
+    const phone = contactData?.phones?.[0] || AGENCY.phones[0];
+    const whatsappNumber = contactData?.whatsapp || AGENCY.whatsapp;
+
+    const phoneUrl = `tel:${phone}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+
     const features = [
         {
             icon: <DollarSign className="w-6 h-6 text-gold" />,
@@ -87,14 +97,14 @@ const FlightBooking = () => {
                                 <span className="block mt-2">Discover Best Deals</span>
                             </h1>
                             <p className="text-lg md:text-xl text-white/70 mb-12 leading-loose max-w-2xl mx-auto font-medium">
-                                Planning your next trip? At Akbar Pura Travels, we provide a personalized booking experience to help you find the best flights at unbeatable prices.
+                                Planning your next trip? At {agencyName}, we provide a personalized booking experience to help you find the best flights at unbeatable prices.
                             </p>
 
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                                 <a href="#booking-steps" className="btn-gold px-10 py-5 rounded-2xl flex items-center gap-3 text-base shadow-2xl hover:scale-105 active:scale-95 transition-all w-full sm:w-auto">
                                     Learn How to Book <ChevronRight className="w-5 h-5" />
                                 </a>
-                                <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe International Flight ki details chahiye.")}`} target="_blank" rel="noopener noreferrer" className="btn-ghost-light px-10 py-5 rounded-2xl flex items-center gap-3 text-base backdrop-blur-md border-white/30 hover:bg-white/10 w-full sm:w-auto">
+                                <a href={`${whatsappUrl}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe International Flight ki details chahiye.")}`} target="_blank" rel="noopener noreferrer" className="btn-ghost-light px-10 py-5 rounded-2xl flex items-center gap-3 text-base backdrop-blur-md border-white/30 hover:bg-white/10 w-full sm:w-auto">
                                     <Headphones className="w-5 h-5" /> Contact Specialist
                                 </a>
                             </div>
@@ -203,7 +213,7 @@ const FlightBooking = () => {
                                         <div className="h-3.5 w-[70%] bg-border/40 rounded-full animate-pulse" />
                                     </div>
                                     <div className="p-6 rounded-2xl bg-gold-gradient text-secondary font-black text-center shadow-gold hover:opacity-95 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-lg tracking-tight uppercase">
-                                        <a href={`${WHATSAPP_URL}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe flight booking ke liye help chahiye.")}`} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                        <a href={`${whatsappUrl}?text=${encodeURIComponent("Assalam-o-Alaikum Akbar Pura Travels! Mujhe flight booking ke liye help chahiye.")}`} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
                                             Book on WhatsApp
                                         </a>
                                     </div>
@@ -238,8 +248,8 @@ const FlightBooking = () => {
                                 Don't miss out on our exclusive deals. Contact our specialists today for a personalized quote.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                                <a href={PHONE_URL} className="btn-gold px-12 py-5 rounded-2xl text-lg w-full sm:w-auto shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                                    Call Now: {AGENCY.phones[0]}
+                                <a href={phoneUrl} className="btn-gold px-12 py-5 rounded-2xl text-lg w-full sm:w-auto shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                                    Call Now: {phone}
                                 </a>
                                 <a href="#contact" className="btn-ghost-light px-12 py-5 rounded-2xl text-lg w-full sm:w-auto backdrop-blur-md border-white/40 hover:bg-white/10 active:scale-95 transition-all">
                                     Send Inquiry

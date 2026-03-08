@@ -17,6 +17,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminBookingDetail from "./pages/admin/AdminBookingDetail";
 import AdminStaff from "./pages/admin/AdminStaff";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 
@@ -38,6 +39,7 @@ const App = () => (
               {/* Admin-only routes */}
               <Route path="dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><AdminStaff /></ProtectedRoute>} />
+              <Route path="settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
 
               {/* Admin + Manager routes */}
               <Route path="packages" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminPackages /></ProtectedRoute>} />

@@ -3,7 +3,7 @@ import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole, UserRole } from "@/hooks/useRole";
 import {
-  LayoutDashboard, Package, Briefcase, MessageSquare, LogOut, Menu, X, Plane, Images, Users, CreditCard, UserCog, Globe
+  LayoutDashboard, Package, Briefcase, MessageSquare, LogOut, Menu, X, Plane, Images, Users, CreditCard, UserCog, Globe, Settings
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ const links: NavLink[] = [
   { to: "/admin/packages", icon: Package, label: "Packages", roles: ['admin', 'manager'] },
   { to: "/admin/services", icon: Briefcase, label: "Services", roles: ['admin', 'manager'] },
   { to: "/admin/gallery", icon: Images, label: "Ads & Promotions", roles: ['admin', 'manager'] },
+  { to: "/admin/settings", icon: Settings, label: "Site Settings", roles: ['admin'] },
   { to: "/admin/staff", icon: UserCog, label: "Staff", roles: ['admin'] },
   { to: "/", icon: Globe, label: "View Website", roles: ['admin', 'manager', 'sales', 'ops'] },
 ];
