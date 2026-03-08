@@ -176,6 +176,7 @@ export default function AdminCustomers() {
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase tracking-wider">
                                 <tr>
+                                    <th className="px-6 py-4 text-left w-12">S.No</th>
                                     <th className="px-6 py-4 text-left">Customer</th>
                                     <th className="px-6 py-4 text-left">Contact</th>
                                     {!selectedCustomer && <th className="px-6 py-4 text-left">Identity</th>}
@@ -197,12 +198,15 @@ export default function AdminCustomers() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    customers.map((c) => (
+                                    customers.map((c, index) => (
                                         <tr
                                             key={c.id}
                                             onClick={() => handleSelectCustomer(c)}
                                             className={`hover:bg-muted/30 transition-colors cursor-pointer group ${selectedCustomer?.id === c.id ? "bg-gold/5 border-l-2 border-gold" : ""}`}
                                         >
+                                            <td className="px-6 py-4 text-muted-foreground font-medium text-xs">
+                                                {index + 1}
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-gold shrink-0 transition-colors ${selectedCustomer?.id === c.id ? "bg-gold/20" : "bg-gold/10 group-hover:bg-gold/15"}`}>

@@ -279,63 +279,74 @@ export default function AdminBookings() {
             )}
           </div>
         ) : (
-          bookings.map((b) => (
-            <Link
-              to={`/admin/bookings/${b.booking_id}`}
-              key={b.booking_id}
-              className="bg-card p-5 rounded-xl border border-border hover:border-gold/40 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-gold font-black text-xs ring-1 ring-border shadow-sm group-hover:ring-gold/30 transition-all">
-                  {b.invoice_no?.split('-').pop()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="text-xs font-mono text-muted-foreground uppercase">{b.invoice_no}</span>
-                    <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-black uppercase bg-muted text-muted-foreground border border-border">
-                      {getTypeIcon(b.booking_type)} {b.booking_type}
-                    </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getStatusColor(b.status)}`}>
-                      {b.status}
-                    </span>
+          <>
+            <div className="bg-muted/50 text-muted-foreground text-[10px] uppercase font-black tracking-widest px-5 py-3 rounded-t-xl flex items-center border-b border-border">
+              <span className="w-12 text-center">S.No</span>
+              <span className="flex-1">Booking Detail</span>
+              <span className="w-24 text-center hidden md:block">Financials</span>
+              <span className="w-8"></span>
+            </div>
+            {bookings.map((b, index) => (
+              <Link
+                to={`/admin/bookings/${b.booking_id}`}
+                key={b.booking_id}
+                className="bg-card p-5 border-x border-b border-border first:border-t hover:border-gold/40 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="flex flex-col items-center gap-1 min-w-[3rem]">
+                    <span className="text-[10px] font-bold text-muted-foreground/60">#{(page * PAGE_SIZE) + index + 1}</span>
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-gold font-black text-[9px] ring-1 ring-border shadow-sm group-hover:ring-gold/30 transition-all">
+                      {b.invoice_no?.split('-').pop()}
+                    </div>
                   </div>
-                  <h3 className="font-bold flex items-center gap-2 text-foreground">
-                    <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    {b.customer_name}
-                    {b.booking_type === 'Ticket' && b.pnr_number && (
-                      <span className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded-md font-mono ml-1">PNR: {b.pnr_number}</span>
-                    )}
-                    {b.booking_type === 'Visa' && b.visa_country && (
-                      <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-md font-bold ml-1">{b.visa_country} Visa</span>
-                    )}
-                  </h3>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="text-xs font-mono text-muted-foreground uppercase">{b.invoice_no}</span>
+                      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-black uppercase bg-muted text-muted-foreground border border-border">
+                        {getTypeIcon(b.booking_type)} {b.booking_type}
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getStatusColor(b.status)}`}>
+                        {b.status}
+                      </span>
+                    </div>
+                    <h3 className="font-bold flex items-center gap-2 text-foreground">
+                      <User className="w-3.5 h-3.5 text-muted-foreground" />
+                      {b.customer_name}
+                      {b.booking_type === 'Ticket' && b.pnr_number && (
+                        <span className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded-md font-mono ml-1">PNR: {b.pnr_number}</span>
+                      )}
+                      {b.booking_type === 'Visa' && b.visa_country && (
+                        <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-md font-bold ml-1">{b.visa_country} Visa</span>
+                      )}
+                    </h3>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-6 px-4 flex-1 max-w-sm">
-                <div className="text-center">
-                  <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Total</p>
-                  <p className="text-sm font-black text-foreground">Rs {Number(b.total_price).toLocaleString()}</p>
+                <div className="grid grid-cols-3 gap-6 px-4 flex-1 max-w-sm">
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Total</p>
+                    <p className="text-sm font-black text-foreground">Rs {Number(b.total_price).toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Paid</p>
+                    <p className="text-sm font-black text-green-500">Rs {Number(b.total_paid).toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Balance</p>
+                    <p className={`text-sm font-black ${b.balance_due > 0 ? "text-gold" : "text-muted-foreground/40 line-through"}`}>
+                      {b.balance_due > 0 ? `Rs ${Number(b.balance_due).toLocaleString()}` : "Cleared ✓"}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Paid</p>
-                  <p className="text-sm font-black text-green-500">Rs {Number(b.total_paid).toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Balance</p>
-                  <p className={`text-sm font-black ${b.balance_due > 0 ? "text-gold" : "text-muted-foreground/40 line-through"}`}>
-                    {b.balance_due > 0 ? `Rs ${Number(b.balance_due).toLocaleString()}` : "Cleared ✓"}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-end">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-gold-gradient group-hover:text-secondary transition-all">
-                  <ArrowRight className="w-4 h-4" />
+                <div className="flex items-center justify-end">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-gold-gradient group-hover:text-secondary transition-all">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            ))}
+          </>
         )}
       </div>
 
