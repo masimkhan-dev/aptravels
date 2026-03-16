@@ -469,6 +469,10 @@ export type Database = {
             }
         }
         Functions: {
+            check_staff_email_exists: {
+                Args: { p_email: string }
+                Returns: boolean
+            }
             has_role: {
                 Args: { _user_id: string; _role: AppRole }
                 Returns: boolean

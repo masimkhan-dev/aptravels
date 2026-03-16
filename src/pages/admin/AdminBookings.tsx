@@ -77,9 +77,9 @@ export default function AdminBookings() {
   };
 
   const fetchDropdowns = async () => {
-    const { data: c } = await supabase.from("customers").select("id, full_name, phone").order("full_name");
+    const { data: c } = await supabase.from("customers_safe_view" as any).select("id, full_name, phone").order("full_name");
     const { data: p } = await supabase.from("packages").select("id, title, price").eq("is_active", true);
-    setCustomers(c || []);
+    setCustomers((c as any) || []);
     setPackages(p || []);
   };
 
@@ -106,8 +106,8 @@ export default function AdminBookings() {
       if (data) {
         toast.success(`Customer "${name}" created!`);
         // Refresh customer list
-        const { data: allCustomers } = await supabase.from("customers").select("*").order("full_name");
-        setCustomers(allCustomers || []);
+        const { data: allCustomers } = await supabase.from("customers_safe_view" as any).select("id, full_name, phone").order("full_name");
+        setCustomers((allCustomers as any) || []);
         // Select the newly created customer
         setSelectedCustomer(data.id);
       }

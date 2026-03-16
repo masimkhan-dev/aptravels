@@ -50,12 +50,21 @@ export default function AdminCustomers() {
     const [bookingsLoading, setBookingsLoading] = useState(false);
 
     const fetchCustomers = async () => {
-        let query = supabase.from("customers").select("*").order("created_at", { ascending: false });
+        let query = supabase
+            .from("customers_safe_view" as any)
+            .select("*, cnic_passport:cnic_passport_masked")
+            .order("created_at", { ascending: false });
+
         if (search) {
             query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%`);
         }
-        const { data } = await query;
-        setCustomers(data || []);
+        
+        const { data, error } = await query;
+        if (error) {
+            console.error("Error fetching customers:", error);
+            toast.error("Failed to load customer list.");
+        }
+        setCustomers((data as any) || []);
         setLoading(false);
     };
 

@@ -19,6 +19,8 @@ export default function AboutSection() {
     const { data: aboutData } = useSiteSettings("about_section");
 
     const title = aboutData?.title || "Serving Pilgrims Since 2019";
+    const urduTitle = aboutData?.urduTitle || "دیانتداری کے ساتھ خدمت — ۲۰۱۹ سے";
+    const subTitle = aboutData?.subTitle || AGENCY.name;
     const description = aboutData?.description || `Akbar Pura International Travels & Tours has been serving people of Nowshera and nearby areas since 2019. We help families plan their Hajj and Umrah trips, book airline tickets, and process visas — without the stress.`;
     const stats = aboutData?.stats || DEFAULT_STATS;
     const features = aboutData?.features || DEFAULT_FEATURES;
@@ -38,7 +40,7 @@ export default function AboutSection() {
                     <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground tracking-tight">
                         {title}
                     </h2>
-                    <p className="text-muted-foreground mt-2 italic text-sm md:text-base opacity-80" dir="rtl">دیانتداری کے ساتھ خدمت — ۲۰۱۹ سے</p>
+                    <p className="text-muted-foreground mt-2 italic text-sm md:text-base opacity-80" dir="rtl">{urduTitle}</p>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 max-w-6xl mx-auto items-start">
@@ -51,23 +53,10 @@ export default function AboutSection() {
                     >
                         <div className="space-y-4">
                             <h3 className="font-display text-3xl font-bold text-foreground border-l-4 border-gold pl-5">
-                                {AGENCY.name}
+                                {subTitle}
                             </h3>
                             <p className="text-muted-foreground leading-loose text-base md:text-lg whitespace-pre-line">
                                 {description}
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <p className="text-muted-foreground leading-relaxed text-base">
-                                Our office is at Madina Market, Akbar Pura. You can walk in and talk to
-                                us directly. <span className="text-foreground font-bold border-b-2 border-gold/30">Shahab Khan</span> and our team take care of your paperwork, bookings, and arrangements
-                                — so you can focus on your journey.
-                            </p>
-                            <p className="text-muted-foreground leading-relaxed text-base">
-                                For tickets, we work with Emirates, Qatar Airways, Saudia,
-                                Pakistan International Airlines, and Oman Air. We find the right
-                                option based on your dates and budget.
                             </p>
                         </div>
 

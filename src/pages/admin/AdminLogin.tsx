@@ -12,6 +12,8 @@ export default function AdminLogin() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   const { role, loading: roleLoading } = useRole();
 
@@ -22,12 +24,43 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+
+    // Context-aware validation
+    if (isResetMode && !email) {
+      setError("Email address is required for password reset.");
+      return;
+    }
+    if (!isResetMode && (!email || !password)) {
       setError("Credentials required.");
       return;
     }
+
     setLoading(true);
     setError("");
+
+    if (isResetMode) {
+      // 1. Safe Verify - Check if user is an actual staff member first using our RPC
+      const { data: exists, error: checkError } = await supabase.rpc('check_staff_email_exists', { p_email: email });
+      
+      if (checkError || !exists) {
+        setError("Account not found. Please contact your system administrator.");
+        setLoading(false);
+        return; // Halt immediately, so we don't send emails to non-existent accounts
+      }
+
+      // 2. If exists, proceed to send standard authorized Supabase reset link
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/login`,
+      });
+      
+      if (resetError) {
+        setError(resetError.message);
+      } else {
+        setResetSent(true);
+      }
+      setLoading(false);
+      return;
+    }
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -111,26 +144,48 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground ml-1">Password</label>
-            <div className="relative group">
-              <input
-                type={showPass ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-4 pr-12 py-3 bg-background rounded-xl border border-input focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-medium transition-all"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
-              >
-                {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+          {!isResetMode && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-sm font-medium text-foreground">Password</label>
+                <button
+                  type="button"
+                  onClick={() => setIsResetMode(true)}
+                  className="text-xs text-gold hover:underline font-bold"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="relative group">
+                <input
+                  type={showPass ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-4 pr-12 py-3 bg-background rounded-xl border border-input focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-medium transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {resetSent && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2.5 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20"
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+              <p className="text-emerald-500 text-sm font-medium leading-tight">Password reset link sent to your email.</p>
+            </motion.div>
+          )}
 
           {error && (
             <motion.div
@@ -150,11 +205,25 @@ export default function AdminLogin() {
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
-                Sign In to Portal
+                {isResetMode ? "Send Reset Link" : "Sign In to Portal"}
                 <Plane className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform" />
               </>
             )}
           </button>
+
+          {isResetMode && (
+            <button
+               type="button"
+               onClick={() => {
+                 setIsResetMode(false);
+                 setResetSent(false);
+                 setError("");
+               }}
+               className="w-full text-center text-sm text-muted-foreground hover:text-foreground mt-4 font-medium"
+            >
+              Back to Login
+            </button>
+          )}
         </form>
 
         <p className="text-center text-xs text-muted-foreground mt-8">

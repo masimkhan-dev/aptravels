@@ -9,20 +9,24 @@ import {
     FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert, TrendingUp
 } from "lucide-react";
 import { AGENCY } from "@/lib/constants";
+import { PaymentHistoryTable } from "@/components/admin/booking-detail/PaymentHistoryTable";
+import { CustomerIdentityPanel } from "@/components/admin/booking-detail/CustomerIdentityPanel";
+import { VisaWorkflowTracker } from "@/components/admin/booking-detail/VisaWorkflowTracker";
+import { BookingStatusManager } from "@/components/admin/booking-detail/BookingStatusManager";
 
 interface BookingDetail {
     id: string;
     invoice_no: string;
-    status: string;
+    customer_id: string;
+    booking_type: 'Package' | 'Ticket' | 'Visa';
     total_price: number;
-    travel_date: string;
-    created_at: string;
-    booking_type: string;
-    pnr_number: string;
-    airline_name: string;
-    ticket_sector: string;
-    visa_country: string;
-    visa_profession: string;
+    travel_date: string | null;
+    status: 'Draft' | 'Confirmed' | 'Completed' | 'Voided';
+    pnr_number: string | null;
+    airline_name: string | null;
+    ticket_sector: string | null;
+    visa_country: string | null;
+    visa_profession: string | null;
     // Visa Workflow Steps
     visa_step_passport_received: boolean;
     visa_step_medical_cleared: boolean;
@@ -86,32 +90,87 @@ export default function AdminBookingDetail() {
     const [updatingMargin, setUpdatingMargin] = useState(false);
 
     const fetchData = async () => {
-        const { data: b } = await (supabase.from("bookings" as any) as any).select(`
-      *, 
-      customers(full_name, phone, address, cnic_passport),
-      packages(title, destination, duration)
-    `).eq("id", id).single();
+        // 1. Fetch main booking record
+        const { data: b, error: bError } = await (supabase.from("bookings" as any) as any)
+            .select("*")
+            .eq("id", id)
+            .single();
 
-        const { data: p } = await (supabase.from("payments" as any) as any)
+        if (bError) {
+            console.error("Error fetching booking:", bError);
+            setLoading(false);
+            return;
+        }
+
+        // 2. Fetch customer from safe view (anyone authenticated can read this)
+        const { data: c } = await (supabase.from("customers_safe_view" as any) as any)
+            .select("full_name, phone, address, cnic_passport:cnic_passport_masked")
+            .eq("id", b.customer_id)
+            .single();
+
+        // 3. Fetch package if applicable
+        let pkg = null;
+        if (b.package_id) {
+            const { data: p } = await (supabase.from("packages" as any) as any)
+                .select("title, destination, duration")
+                .eq("id", b.package_id)
+                .single();
+            pkg = p;
+        }
+
+        const { data: paymentsData } = await (supabase.from("payments" as any) as any)
             .select("*")
             .eq("booking_id", id)
             .order("payment_date", { ascending: true });
 
-        const { data: a } = await (supabase.from("booking_agreements" as any) as any)
+        const { data: agreementData } = await (supabase.from("booking_agreements" as any) as any)
             .select("*")
             .eq("booking_id", id)
             .single();
 
         if (b) {
-            setBooking(b as any);
+            setBooking({
+                ...b,
+                customers: c || { full_name: "Deleted Customer", phone: "-", address: "-", cnic_passport: null },
+                packages: pkg
+            } as any);
             setEditMarginValue(String(b.margin || 0));
         }
-        if (p) setPayments(p as any);
-        if (a) setAgreement(a as any);
+        if (paymentsData) setPayments(paymentsData as any);
+        if (agreementData) setAgreement(agreementData as any);
         setLoading(false);
     };
 
     useEffect(() => { fetchData(); }, [id]);
+
+    const handleToggleCnic = async () => {
+        // Only fetch if revealing and we have the masked value currently
+        if (!cnicRevealed && booking?.customer_id) {
+            try {
+                const { data, error } = await supabase.rpc('get_customer_pii' as any, {
+                    p_customer_id: booking.customer_id
+                });
+                
+                if (error) throw error;
+                
+                if (data && (data as any[]).length > 0) {
+                    const pii = (data as any[])[0];
+                    setBooking(prev => prev ? {
+                        ...prev,
+                        customers: {
+                            ...prev.customers,
+                            cnic_passport: pii.cnic_passport
+                        }
+                    } : null);
+                }
+            } catch (error: any) {
+                console.error("Failed to reveal PII:", error);
+                toast.error("Unauthorized: You do not have permission to view PII.");
+                return; // don't toggle if fetch failed
+            }
+        }
+        setCnicRevealed(v => !v);
+    };
 
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -250,18 +309,6 @@ export default function AdminBookingDetail() {
     const progressPercent = (completedSteps / visaSteps.length) * 100;
 
     // State Machine: Only allowed forward transitions exposed in UI
-    const getAllowedStatuses = (current: string): string[] => {
-        switch (current) {
-            case 'Draft': return ['Draft', 'Confirmed', 'Voided'];
-            case 'Confirmed': return ['Confirmed', 'Completed', 'Voided'];
-            case 'Completed': return ['Completed'];
-            case 'Voided': return ['Voided'];
-            default: return ['Draft'];
-        }
-    };
-
-    const isStatusTerminal = (s: string) => s === 'Completed' || s === 'Voided';
-
     const handleStatusChange = async (newStatus: string) => {
         if (!booking || newStatus === booking.status) return;
         const { error } = await (supabase
@@ -315,38 +362,13 @@ export default function AdminBookingDetail() {
                     </Link>
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="text-sm font-mono text-muted-foreground uppercase">{booking.invoice_no}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase bg-muted text-muted-foreground`}>
-                                    {booking.booking_type}
-                                </span>
-                                {/* Status: Dropdown for admin/manager, badge for others */}
-                                {(role === 'admin' || role === 'manager') ? (
-                                    <select
-                                        value={booking.status}
-                                        onChange={e => handleStatusChange(e.target.value)}
-                                        disabled={isStatusTerminal(booking.status)}
-                                        className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ring-1 outline-none cursor-pointer transition-all
-                                        ${booking.status === 'Voided' ? 'bg-destructive/10 text-destructive ring-destructive/20'
-                                                : booking.status === 'Completed' ? 'bg-green-500/10 text-green-600 ring-green-500/20'
-                                                    : booking.status === 'Confirmed' ? 'bg-gold/10 text-gold ring-gold/20'
-                                                        : 'bg-muted text-muted-foreground ring-border'}
-                                        ${isStatusTerminal(booking.status) ? 'cursor-not-allowed opacity-70' : 'hover:opacity-80'}`}
-                                    >
-                                        {getAllowedStatuses(booking.status).map(s => (
-                                            <option key={s} value={s}>{s}</option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ring-1
-                                    ${booking.status === 'Voided' ? 'bg-destructive/10 text-destructive ring-destructive/20'
-                                            : booking.status === 'Completed' ? 'bg-green-500/10 text-green-600 ring-green-500/20'
-                                                : 'bg-gold/10 text-gold ring-gold/20'}`}
-                                    >
-                                        {booking.status}
-                                    </span>
-                                )}
-                            </div>
+                            <BookingStatusManager
+                                status={booking.status}
+                                bookingType={booking.booking_type}
+                                invoiceNo={booking.invoice_no}
+                                role={role}
+                                onStatusChange={handleStatusChange}
+                            />
                             <h1 className="text-3xl font-display font-bold">Ledger: {booking.customers.full_name}</h1>
                         </div>
                         <button onClick={handlePrint} className="flex items-center gap-2 px-6 py-3 bg-gold-gradient text-secondary rounded-xl font-bold hover:opacity-90 transition-all shadow-gold">
@@ -361,247 +383,44 @@ export default function AdminBookingDetail() {
 
                         {/* Visa Workflow Tracker (Only for Visa) */}
                         {booking.booking_type === 'Visa' && (
-                            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in slide-in-from-top-4 duration-500 mb-8">
-                                <div className="p-6 border-b border-border bg-blue-500/[0.03] flex items-center justify-between">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                                            <h3 className="font-bold text-sm text-blue-600 uppercase tracking-tight flex items-center gap-2">
-                                                <FileText className="w-4 h-4" /> Visa Stamping Pipeline
-                                            </h3>
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">System Tracked • Stage {completedSteps}/5</p>
-                                    </div>
-                                    <div className="bg-blue-600/10 px-4 py-2 rounded-xl border border-blue-600/20">
-                                        <p className="text-2xl font-black text-blue-600 leading-none">{Math.round(progressPercent)}%</p>
-                                        <p className="text-[8px] font-bold text-blue-400 uppercase mt-1 text-center">Done</p>
-                                    </div>
-                                </div>
-
-                                {/* Progress Bar Container */}
-                                <div className="px-6 pt-5">
-                                    <div className="h-3 w-full bg-muted rounded-full overflow-hidden p-0.5 border border-border/50 shadow-inner">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(37,99,235,0.4)]"
-                                            style={{ width: `${progressPercent}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                                    {visaSteps.map((step, idx) => {
-                                        const isDone = (booking as any)[step.key];
-                                        const canEditVisa = role === 'admin' || role === 'manager' || role === 'ops';
-                                        return (
-                                            <button
-                                                key={step.key}
-                                                onClick={() => canEditVisa && toggleVisaStep(step.key as any, isDone)}
-                                                className={`flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border transition-all text-center relative overflow-hidden group ${isDone
-                                                    ? 'bg-emerald-600 border-emerald-600 shadow-lg shadow-emerald-500/20 translate-y-[-2px]'
-                                                    : 'bg-background border-border hover:border-blue-400 hover:bg-muted/50'
-                                                    } ${!canEditVisa ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                disabled={!canEditVisa}
-                                            >
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-transform duration-300 ${canEditVisa ? 'group-hover:scale-110' : ''} ${isDone ? 'bg-white/20 border-white text-white' : 'bg-muted border-border text-muted-foreground'
-                                                    }`}>
-                                                    {isDone ? <Check className="w-4 h-4" /> : <span className="text-[10px] font-black">{idx + 1}</span>}
-                                                </div>
-                                                <span className={`text-[10px] font-black uppercase tracking-tight leading-tight ${isDone ? 'text-white' : 'text-muted-foreground'
-                                                    }`}>
-                                                    {step.label}
-                                                </span>
-
-                                                {/* Subtle glass effect for active cards */}
-                                                {isDone && <div className="absolute top-0 left-[-100%] w-full h-full bg-white/10 skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <VisaWorkflowTracker
+                                booking={booking as any}
+                                role={role}
+                                onToggleStep={(key, curr) => toggleVisaStep(key as any, curr)}
+                            />
                         )}
 
-                        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                            <div className="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
-                                <h3 className="font-bold flex items-center gap-2"><History className="w-4 h-4 text-gold" /> Transaction History</h3>
-                                <div className="text-right">
-                                    <p className="text-[10px] uppercase text-muted-foreground font-black tracking-widest mb-1">Current Balance Due</p>
-                                    <p className="text-2xl font-black text-gold">Rs {balance.toLocaleString()}</p>
-                                </div>
-                            </div>
-
-                            {(role === 'admin' || role === 'manager') && booking.margin !== undefined && (
-                                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 m-6 mb-0">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <div className="flex items-center gap-2 text-emerald-600">
-                                            <TrendingUp className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Profit Margin</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setIsEditingMargin(!isEditingMargin)}
-                                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight"
-                                        >
-                                            {isEditingMargin ? "Cancel" : "Edit Margin"}
-                                        </button>
-                                    </div>
-
-                                    {isEditingMargin ? (
-                                        <div className="flex gap-2 mt-2">
-                                            <div className="relative flex-1">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-[10px] font-black">Rs</span>
-                                                <input
-                                                    type="number"
-                                                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-emerald-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-emerald-700"
-                                                    value={editMarginValue}
-                                                    onChange={e => setEditMarginValue(e.target.value)}
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={handleUpdateMargin}
-                                                disabled={updatingMargin}
-                                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 transition-all flex items-center gap-2"
-                                            >
-                                                {updatingMargin ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                                                Save
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <p className="text-xl font-black text-emerald-700">Rs {Number(booking.margin || 0).toLocaleString()}</p>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="divide-y divide-border">
-                                {payments.length === 0 && (
-                                    <div className="p-12 text-center text-muted-foreground italic bg-background/50">No payments recorded yet.</div>
-                                )}
-                                {payments.map(p => (
-                                    <div key={p.id} className={`p-5 flex items-center justify-between transition-colors hover:bg-muted/30 ${p.voided ? 'opacity-40 grayscale italic' : ''}`}>
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${p.voided ? 'bg-muted' : 'bg-green-500/10 text-green-500'}`}>
-                                                <DollarSign className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-foreground">Rs {Number(p.amount_paid).toLocaleString()}</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                                                    {new Date(p.payment_date).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {p.payment_method}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {p.voided ? (
-                                            <div className="text-right">
-                                                <span className="text-[10px] bg-muted text-muted-foreground px-3 py-1 rounded-full font-black tracking-widest uppercase block mb-1">VOIDED</span>
-                                                {(role === 'admin' || role === 'manager') && (
-                                                    <p className="text-[9px] text-destructive italic font-medium max-w-[120px] truncate">{p.void_reason}</p>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            (role === 'admin' || role === 'manager') && (
-                                                <button
-                                                    onClick={() => openVoidModal(p.id)}
-                                                    className="text-[10px] text-muted-foreground hover:text-destructive font-bold uppercase tracking-widest border border-border px-3 py-1 rounded-full hover:border-destructive transition-all"
-                                                >
-                                                    Void
-                                                </button>
-                                            )
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="p-6 bg-muted/10 border-t border-border flex justify-between items-center font-bold">
-                                <span className="text-sm">Total Quote: Rs {Number(booking.total_price).toLocaleString()}</span>
-                                <span className="text-sm text-green-500">Net Received: Rs {totalPaid.toLocaleString()}</span>
-                            </div>
-                        </div>
-
-                        {/* Add Payment Form */}
-                        {(role === 'admin' || role === 'manager') && booking.status !== 'Completed' && booking.status !== 'Voided' && (
-                            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                                <h3 className="font-bold mb-4 flex items-center gap-2"><DollarSign className="w-4 h-4 text-green-500" /> Professional Receipting</h3>
-                                <form onSubmit={handlePayment} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">Rs</span>
-                                        <input
-                                            type="number"
-                                            placeholder="0.00"
-                                            required
-                                            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-bold"
-                                            value={payAmount}
-                                            onChange={e => setPayAmount(e.target.value)}
-                                        />
-                                    </div>
-                                    <input
-                                        type="date"
-                                        className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold text-sm"
-                                        value={payDate}
-                                        onChange={e => setPayDate(e.target.value)}
-                                    />
-                                    <select
-                                        className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-medium"
-                                        value={payMethod}
-                                        onChange={e => setPayMethod(e.target.value)}
-                                    >
-                                        <option value="Cash">Cash Payment</option>
-                                        <option value="Bank Transfer">Bank Transfer / Online</option>
-                                        <option value="Cheque">Cheque Deposit</option>
-                                    </select>
-                                    <button
-                                        disabled={paying}
-                                        className="bg-gold-gradient text-secondary rounded-lg font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-gold"
-                                    >
-                                        {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                                        {paying ? "Recording..." : "Add Payment"}
-                                    </button>
-                                </form>
-                            </div>
-                        )}
+                        <PaymentHistoryTable
+                            payments={payments}
+                            totalPrice={booking.total_price}
+                            balance={balance}
+                            totalPaid={totalPaid}
+                            role={role}
+                            bookingStatus={booking.status}
+                            margin={booking.margin}
+                            payAmount={payAmount}
+                            payMethod={payMethod}
+                            payDate={payDate}
+                            paying={paying}
+                            onPayAmountChange={setPayAmount}
+                            onPayMethodChange={setPayMethod}
+                            onPayDateChange={setPayDate}
+                            onSubmitPayment={handlePayment}
+                            isEditingMargin={isEditingMargin}
+                            editMarginValue={editMarginValue}
+                            updatingMargin={updatingMargin}
+                            onToggleMargin={() => setIsEditingMargin(!isEditingMargin)}
+                            onMarginChange={setEditMarginValue}
+                            onSaveMargin={handleUpdateMargin}
+                            onOpenVoid={openVoidModal}
+                            voidTargetId={voidTargetId}
+                            voidReason={voidReason}
+                            voiding={voiding}
+                            onVoidReasonChange={setVoidReason}
+                            onVoidConfirm={handleVoidConfirm}
+                            onVoidCancel={() => setVoidTargetId(null)}
+                        />
                     </div>
-
-                    {/* Void Payment Modal (Needs to be inside the main container but outside the columns or just handled properly) */}
-                    {voidTargetId && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-                            <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                                <div className="p-6 border-b border-border bg-destructive/5 flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-destructive">Void Payment</h3>
-                                        <p className="text-xs text-muted-foreground mt-0.5">This action is irreversible and will be logged.</p>
-                                    </div>
-                                    <button onClick={() => setVoidTargetId(null)} className="text-muted-foreground hover:text-foreground">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="p-6 space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold uppercase text-muted-foreground mb-2 block">Void Reason <span className="text-destructive">*</span></label>
-                                        <textarea
-                                            value={voidReason}
-                                            onChange={e => setVoidReason(e.target.value)}
-                                            minLength={10}
-                                            rows={3}
-                                            placeholder="Describe the reason for voiding (min. 10 characters)..."
-                                            className="w-full px-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-destructive text-sm resize-none"
-                                        />
-                                        <p className="text-[10px] text-muted-foreground mt-1">{voidReason.length}/10 minimum characters</p>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setVoidTargetId(null)}
-                                            className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted font-bold text-sm transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleVoidConfirm}
-                                            disabled={voiding || voidReason.trim().length < 10}
-                                            className="flex-1 px-4 py-2.5 bg-destructive text-destructive-foreground rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            {voiding ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                                            {voiding ? 'Voiding...' : 'Confirm Void'}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Right: Summary Sidebar (Hidden in Print) */}
                     <div className="space-y-6 no-print">
@@ -678,44 +497,15 @@ export default function AdminBookingDetail() {
                             )}
                         </div>
 
-                        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                            <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black mb-4 flex items-center gap-2">
-                                <User className="w-3.5 h-3.5" /> Customer Identity
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Primary Contact</p>
-                                    <p className="font-bold text-lg">{booking.customers.phone}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Mailing Address</p>
-                                    <p className="text-sm font-medium">{booking.customers.address || "No address provided"}</p>
-                                </div>
-                                {booking.customers.cnic_passport && (
-                                    <div>
-                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Passport / CNIC</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-sm font-mono font-bold text-gold">
-                                                {cnicRevealed
-                                                    ? booking.customers.cnic_passport
-                                                    : '●●●●●-●●●●●●●-●'}
-                                            </p>
-                                            {(role === 'admin' || role === 'manager') && (
-                                                <button
-                                                    onClick={() => setCnicRevealed(v => !v)}
-                                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                                    title={cnicRevealed ? 'Hide CNIC' : 'Reveal CNIC'}
-                                                >
-                                                    {cnicRevealed
-                                                        ? <EyeOff className="w-3.5 h-3.5" />
-                                                        : <Eye className="w-3.5 h-3.5" />}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <CustomerIdentityPanel
+                            customerName={booking.customers.full_name}
+                            phone={booking.customers.phone}
+                            address={booking.customers.address}
+                            cnicPassport={booking.customers.cnic_passport}
+                            role={role}
+                            cnicRevealed={cnicRevealed}
+                            onToggleCnic={handleToggleCnic}
+                        />
 
                         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                             <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black mb-4 flex items-center gap-2">

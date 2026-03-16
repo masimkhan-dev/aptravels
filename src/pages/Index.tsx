@@ -5,6 +5,8 @@ import AboutSection from "@/components/public/AboutSection";
 import ServicesSection from "@/components/public/ServicesSection";
 import PackagesSection from "@/components/public/PackagesSection";
 import GallerySection from "@/components/public/GallerySection";
+import TestimonialsSection from "@/components/public/TestimonialsSection";
+import VipCta from "@/components/public/VipCta";
 import InquiryForm from "@/components/public/InquiryForm";
 import FloatingButtons from "@/components/public/FloatingButtons";
 import Footer from "@/components/public/Footer";
@@ -19,6 +21,8 @@ const Index = () => {
       <ServicesSection />
       <PackagesSection />
       <GallerySection />
+      <TestimonialsSection />
+      <VipCta />
       <InquiryForm />
       <Footer />
       <FloatingButtons />

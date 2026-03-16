@@ -2,8 +2,9 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Plane, FileCheck, Hotel, MapPin, ShieldCheck, Loader2, Calendar, Award,
+  Plane, FileCheck, Hotel, MapPin, ShieldCheck, Calendar, Award,
 } from "lucide-react";
+import { StaggerContainer, StaggerItem } from "@/components/ui/MotionWrappers";
 
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
@@ -58,35 +59,40 @@ export default function ServicesSection() {
         </motion.div>
 
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="group p-7 rounded-2xl bg-card shadow-card gold-border animate-pulse">
+                <div className="w-12 h-12 rounded-xl bg-muted mb-5" />
+                <div className="h-5 w-2/3 bg-muted rounded-lg mb-3" />
+                <div className="space-y-2">
+                  <div className="h-3 w-full bg-muted rounded" />
+                  <div className="h-3 w-5/6 bg-muted rounded" />
+                  <div className="h-3 w-4/6 bg-muted rounded" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services?.map((s, i) => {
+          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" delay={0.1}>
+            {services?.map((s) => {
               const Icon = iconMap[s.icon] || Plane;
               return (
-                <motion.div
-                  key={s.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group p-7 rounded-2xl bg-card shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-300 gold-border"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-gold-gradient group-hover:shadow-gold group-hover:scale-110 transition-all duration-300">
-                    <Icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
+                <StaggerItem key={s.id}>
+                  <div className="group p-7 rounded-2xl bg-card shadow-card hover:shadow-card-hover hover:-translate-y-2 transition-all duration-300 gold-border h-full">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-gold-gradient group-hover:shadow-gold group-hover:scale-110 transition-all duration-300">
+                      <Icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-card-foreground mb-2 tracking-tight group-hover:text-gold transition-colors duration-300">
+                      {s.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {s.description}
+                    </p>
                   </div>
-                  <h3 className="font-display text-lg font-bold text-card-foreground mb-2 tracking-tight">
-                    {s.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {s.description}
-                  </p>
-                </motion.div>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         )}
       </div>
     </section>

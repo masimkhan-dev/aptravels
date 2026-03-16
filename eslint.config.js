@@ -23,4 +23,15 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: ["src/pages/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [{
+          name: "@/integrations/supabase/client",
+          message: "⚠️ DO NOT ACCESS SUPABASE DIRECTLY FROM COMPONENTS. Please use the service layer (src/services/*) instead."
+        }]
+      }]
+    }
+  }
 );

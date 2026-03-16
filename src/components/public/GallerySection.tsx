@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,10 +49,15 @@ export default function GallerySection() {
                     <p className="text-muted-foreground mt-2 text-sm" dir="rtl">تازہ ترین آفرز اور اعلانات</p>
                 </motion.div>
 
-                {/* Loading state */}
                 {isLoading && (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-gold" />
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div
+                                key={i}
+                                className="aspect-square rounded-2xl bg-muted animate-pulse"
+                                style={{ animationDelay: `${i * 80}ms` }}
+                            />
+                        ))}
                     </div>
                 )}
 

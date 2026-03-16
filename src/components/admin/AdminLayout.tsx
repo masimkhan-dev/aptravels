@@ -3,9 +3,12 @@ import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole, UserRole } from "@/hooks/useRole";
 import {
-  LayoutDashboard, Package, Briefcase, MessageSquare, LogOut, Menu, X, Plane, Images, Users, CreditCard, UserCog, Globe, Settings
+  LayoutDashboard, Package, Briefcase, MessageSquare, LogOut, Menu, X, Plane, Images, Users, CreditCard, UserCog, Globe, Settings, Receipt, Wallet, History, Key, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface NavLink {
   to: string;
@@ -16,6 +19,9 @@ interface NavLink {
 
 const links: NavLink[] = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ['admin'] },
+  { to: "/admin/expenses", icon: Receipt, label: "Expenses", roles: ['admin'] },
+  { to: "/admin/agents", icon: Users, label: "Agents Registry", roles: ['admin', 'manager'] },
+  { to: "/admin/agent-ledger", icon: Wallet, label: "Agent Ledger", roles: ['admin', 'manager'] },
   { to: "/admin/inquiries", icon: MessageSquare, label: "Inquiries", roles: ['admin', 'manager', 'sales'] },
   { to: "/admin/customers", icon: Users, label: "Customers", roles: ['admin', 'manager', 'sales'] },
   { to: "/admin/bookings", icon: CreditCard, label: "Bookings", roles: ['admin', 'manager', 'sales', 'ops'] },
@@ -31,6 +37,9 @@ export default function AdminLayout() {
   const { role, loading: roleLoading } = useRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -78,10 +87,56 @@ export default function AdminLayout() {
     await supabase.auth.signOut();
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+    
+    setUpdatingPassword(true);
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      toast.error(error.message || "Failed to update password.");
+    } else {
+      toast.success("Password updated successfully!");
+      setShowChangePassword(false);
+      setNewPassword("");
+    }
+    setUpdatingPassword(false);
+  };
+
   if (roleLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-muted flex">
+        {/* Skeleton sidebar */}
+        <div className="hidden lg:flex flex-col w-64 bg-secondary border-r border-sidebar-border p-6 gap-6">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-full bg-sidebar-accent animate-pulse" />
+            <div className="h-3.5 w-28 bg-sidebar-accent rounded animate-pulse" />
+          </div>
+          <div className="space-y-2 pt-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-10 rounded-lg bg-sidebar-accent/60 animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+            ))}
+          </div>
+        </div>
+        {/* Skeleton main */}
+        <div className="flex-1 flex flex-col">
+          <div className="h-14 bg-card border-b border-border animate-pulse" />
+          <div className="flex-1 p-6 space-y-4">
+            <div className="h-8 w-48 bg-muted-foreground/10 rounded-xl animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-32 rounded-2xl bg-muted-foreground/8 animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+              ))}
+            </div>
+            <div className="h-64 rounded-2xl bg-muted-foreground/8 animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -114,15 +169,16 @@ export default function AdminLayout() {
                 key={l.to}
                 to={l.to}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
-                  ? "bg-sidebar-accent text-gold"
-                  : "text-secondary-foreground/70 hover:bg-sidebar-accent hover:text-secondary-foreground"
-                  }`}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  active
+                    ? "sidebar-link-active"
+                    : "text-secondary-foreground/70 hover:bg-sidebar-accent hover:text-secondary-foreground hover:translate-x-0.5"
+                }`}
               >
-                <l.icon className="w-4 h-4" />
+                <l.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-gold" : ""}`} />
                 {l.label}
                 {l.label === "Inquiries" && unreadCount > 0 && (
-                  <span className="ml-auto text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">
+                  <span className="ml-auto text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full font-black">
                     {unreadCount}
                   </span>
                 )}
@@ -131,10 +187,16 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="absolute bottom-4 left-4 right-4 focus:outline-none">
+        <div className="absolute bottom-4 left-4 right-4 focus:outline-none space-y-2">
+          <button
+            onClick={() => setShowChangePassword(true)}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-secondary-foreground/70 hover:bg-sidebar-accent hover:text-secondary-foreground transition-colors w-full"
+          >
+            <Key className="w-4 h-4" /> Change Password
+          </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-secondary-foreground/70 hover:bg-sidebar-accent hover:text-secondary-foreground transition-colors w-full"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-secondary-foreground/70 hover:bg-sidebar-accent hover:text-red-500 transition-colors w-full"
           >
             <LogOut className="w-4 h-4" /> Logout
           </button>
@@ -143,7 +205,10 @@ export default function AdminLayout() {
 
       {/* Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-foreground/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Main content */}
@@ -170,6 +235,39 @@ export default function AdminLayout() {
           <Outlet context={{ unreadCount }} />
         </main>
       </div>
+
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent className="sm:max-w-[400px]">
+          <form onSubmit={handleChangePassword}>
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>
+                Enter your new password below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6">
+              <label className="text-sm font-medium mb-2 block">New Password</label>
+              <Input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowChangePassword(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-gold hover:bg-gold/90 text-white font-bold" disabled={updatingPassword}>
+                {updatingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Update Password
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

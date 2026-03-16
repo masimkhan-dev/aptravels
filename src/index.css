@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -281,5 +281,107 @@
   .mask-fade-edges {
     mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  }
+
+  /* ====================================================
+     GLOBAL FOCUS-VISIBLE — WCAG AA Keyboard Accessibility
+  ==================================================== */
+  :focus-visible {
+    outline: 2px solid hsl(var(--gold));
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* ====================================================
+     TESTIMONIAL CARD — Glassmorphism premium style
+  ==================================================== */
+  .testimonial-card {
+    @apply relative bg-card rounded-3xl p-8 border border-border shadow-card;
+    background: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
+  }
+
+  .testimonial-card::before {
+    content: '\201C';
+    @apply absolute top-4 left-6 font-display text-7xl text-gold/20 leading-none pointer-events-none select-none;
+  }
+
+  /* ====================================================
+     VIP / CONCIERGE CTA — Dark premium section
+  ==================================================== */
+  .vip-section {
+    background: linear-gradient(135deg, hsl(213 65% 8%) 0%, hsl(213 55% 14%) 60%, hsl(38 70% 12%) 100%);
+    @apply relative overflow-hidden;
+  }
+
+  .vip-section::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: radial-gradient(ellipse 60% 50% at 85% 50%, hsl(43 78% 46% / 0.12) 0%, transparent 70%);
+  }
+
+  /* ====================================================
+     STATUS BADGES — Admin ERP
+  ==================================================== */
+  .status-confirmed {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+    background: hsl(142 76% 36% / 0.12);
+    color: hsl(142 76% 30%);
+    border: 1px solid hsl(142 76% 36% / 0.25);
+  }
+
+  .status-pending {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+    background: hsl(38 92% 50% / 0.12);
+    color: hsl(38 92% 38%);
+    border: 1px solid hsl(38 92% 50% / 0.25);
+  }
+
+  .status-cancelled {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+    background: hsl(0 84% 60% / 0.10);
+    color: hsl(0 84% 48%);
+    border: 1px solid hsl(0 84% 60% / 0.20);
+  }
+
+  .status-draft {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+    background: hsl(215 20% 65% / 0.12);
+    color: hsl(215 20% 40%);
+    border: 1px solid hsl(215 20% 65% / 0.25);
+  }
+
+  /* ====================================================
+     ADMIN SIDEBAR ACTIVE LINK
+  ==================================================== */
+  .sidebar-link-active {
+    @apply relative;
+    background: hsl(var(--sidebar-accent));
+    color: hsl(var(--gold));
+    border-left: 3px solid hsl(var(--gold));
+  }
+
+  .sidebar-link-active::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none rounded-lg;
+    background: linear-gradient(90deg, hsl(43 78% 46% / 0.08) 0%, transparent 100%);
+  }
+
+  /* ====================================================
+     PACKAGE CARD IMAGE ZOOM
+  ==================================================== */
+  .pkg-card-img {
+    @apply w-full h-full object-cover transition-transform duration-700 ease-out;
+  }
+
+  .pkg-card:hover .pkg-card-img {
+    transform: scale(1.06);
+  }
+
+  /* ====================================================
+     BOOKING STEP TIMELINE LINE
+  ==================================================== */
+  .timeline-line {
+    @apply absolute left-6 top-0 bottom-0 w-px;
+    background: linear-gradient(to bottom, hsl(43 78% 46% / 0.05) 0%, hsl(43 78% 46% / 0.35) 50%, hsl(43 78% 46% / 0.05) 100%);
   }
 }

@@ -18,6 +18,9 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminBookingDetail from "./pages/admin/AdminBookingDetail";
 import AdminStaff from "./pages/admin/AdminStaff";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminExpenses from "./pages/admin/AdminExpenses";
+import AdminAgents from "./pages/admin/AdminAgents";
+import AdminAgentLedger from "./pages/admin/AdminAgentLedger";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 
@@ -40,6 +43,9 @@ const App = () => (
               <Route path="dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><AdminStaff /></ProtectedRoute>} />
               <Route path="settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
+              <Route path="expenses" element={<ProtectedRoute allowedRoles={['admin']}><AdminExpenses /></ProtectedRoute>} />
+              <Route path="agents" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminAgents /></ProtectedRoute>} />
+              <Route path="agent-ledger" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminAgentLedger /></ProtectedRoute>} />
 
               {/* Admin + Manager routes */}
               <Route path="packages" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminPackages /></ProtectedRoute>} />

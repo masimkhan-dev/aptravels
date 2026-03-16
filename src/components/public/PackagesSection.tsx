@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getPackages } from "@/integrations/supabase/packages";
-import { MapPin, Clock, Check, Star, Loader2 } from "lucide-react";
+import { MapPin, Clock, Check, Star } from "lucide-react";
 import { AGENCY, WHATSAPP_URL } from "@/lib/constants";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
@@ -49,8 +49,29 @@ export default function PackagesSection() {
         </motion.div>
 
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-card gold-border shadow-card overflow-hidden animate-pulse">
+                {/* Card header skeleton */}
+                <div className="bg-muted p-6 pb-8 space-y-3">
+                  <div className="h-5 w-3/4 bg-muted-foreground/10 rounded-lg" />
+                  <div className="h-3 w-1/2 bg-muted-foreground/10 rounded-lg" />
+                </div>
+                {/* Card body skeleton */}
+                <div className="p-6 space-y-4">
+                  <div className="h-3 w-full bg-muted rounded-lg" />
+                  <div className="h-3 w-5/6 bg-muted rounded-lg" />
+                  <div className="h-3 w-4/6 bg-muted rounded-lg" />
+                  <div className="flex items-center justify-between pt-6 border-t border-border mt-4">
+                    <div className="space-y-1.5">
+                      <div className="h-2.5 w-20 bg-muted rounded" />
+                      <div className="h-7 w-32 bg-muted-foreground/10 rounded-lg" />
+                    </div>
+                    <div className="h-10 w-24 bg-muted-foreground/10 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
