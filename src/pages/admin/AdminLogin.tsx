@@ -50,7 +50,7 @@ export default function AdminLogin() {
 
       // 2. If exists, proceed to send standard authorized Supabase reset link
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/admin/login`,
+        redirectTo: `${window.location.origin}/admin/reset-password`,
       });
       
       if (resetError) {

@@ -21,6 +21,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminExpenses from "./pages/admin/AdminExpenses";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminAgentLedger from "./pages/admin/AdminAgentLedger";
+import ResetPassword from "./pages/admin/ResetPassword";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/flights" element={<FlightBooking />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               {/* Admin-only routes */}

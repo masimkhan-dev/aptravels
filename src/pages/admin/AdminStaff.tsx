@@ -103,22 +103,38 @@ export default function AdminStaff() {
                 setCurrentUserId(authData.user.id);
             }
 
-            const { data: rolesData, error: rolesError } = await supabase.from("user_roles").select("*");
+            // JOIN roles with profiles for a clean, filtered list
+            const { data: rolesData, error: rolesError } = await supabase
+                .from("user_roles")
+                .select(`
+                    id, 
+                    user_id, 
+                    role
+                `);
+
             if (rolesError) throw rolesError;
 
-            const { data: profilesData, error: profilesError } = await supabase.from("staff_profiles").select("*");
+            const { data: profilesData, error: profilesError } = await supabase
+                .from("staff_profiles")
+                .select("*");
+
             if (profilesError) throw profilesError;
 
-            const enrichedStaff = rolesData?.map(role => {
-                const profile = profilesData?.find(p => p.id === role.user_id);
-                return {
-                    ...role,
-                    email: profile?.email || "Unknown Email",
-                    full_name: profile?.full_name || "Unknown Staff"
-                };
-            }) || [];
+            // Map and filter: If there is a role but NO profile (Unknown), we skip it to keep UI clean
+            const enrichedStaff = rolesData
+                ?.map(role => {
+                    const profile = profilesData?.find(p => p.id === role.user_id);
+                    if (!profile) return null; // Filter out orphaned roles entirely
 
-            setStaff(enrichedStaff);
+                    return {
+                        ...role,
+                        email: profile.email,
+                        full_name: profile.full_name
+                    };
+                })
+                .filter(Boolean) as StaffMember[];
+
+            setStaff(enrichedStaff || []);
         } catch (error: any) {
             toast.error("Failed to fetch staff data");
         } finally {
@@ -184,15 +200,38 @@ export default function AdminStaff() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to revoke this user's access?")) return;
+    const handleDelete = async (member: StaffMember) => {
+        if (!confirm(`Are you sure you want to PERMANENTLY revoke access for ${member.full_name}?`)) return;
+        
+        setLoading(true);
         try {
-            const { error } = await supabase.from("user_roles").delete().eq("id", id);
-            if (error) throw error;
-            toast.success("Access revoked successfully");
+            // Use the atomic RPC to clean up both role and profile
+            const { error } = await (supabase.rpc as any)('rpc_delete_staff_member', { 
+                p_user_id: member.user_id 
+            });
+            
+            if (error) {
+                // FALLBACK: If RPC is not deployed yet, try a simple role delete
+                if (error.message.includes('does not exist')) {
+                    const { error: simpleError } = await supabase
+                        .from("user_roles")
+                        .delete()
+                        .eq("id", member.id);
+                    
+                    if (simpleError) throw simpleError;
+                    toast("Access revoked (Profile remains - Deployment of migrations recommended).");
+                } else {
+                    throw error;
+                }
+            } else {
+                toast.success("Staff access and profile cleaned successfully.");
+            }
+
             fetchData();
-        } catch (error) {
-            toast.error("Failed to revoke access");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to revoke access");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -281,7 +320,7 @@ export default function AdminStaff() {
                                                             <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 px-3 py-1.5 bg-muted/50 rounded-full border border-border/50">Current User</span>
                                                         ) : (
                                                             <button
-                                                                onClick={() => handleDelete(s.id)}
+                                                                onClick={() => handleDelete(s)}
                                                                 className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                                                 title="Revoke Access"
                                                             >
