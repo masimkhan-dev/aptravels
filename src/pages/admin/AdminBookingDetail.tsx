@@ -473,8 +473,8 @@ export default function AdminBookingDetail() {
                         </div>
                         {/* Logo */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '68px', height: '68px', borderRadius: '50%', border: '2.5px solid #c9a227', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fffdf5' }}>
-                                <img src="/logo-main.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <div style={{ width: '68px', height: '68px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', boxShadow: '0 6px 12px rgba(0,0,0,0.15)' }}>
+                                <img src="/logo-main.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
                             {paymentStatusBadge}
                         </div>
