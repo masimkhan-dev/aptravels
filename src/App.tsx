@@ -21,6 +21,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminExpenses from "./pages/admin/AdminExpenses";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminAgentLedger from "./pages/admin/AdminAgentLedger";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import ResetPassword from "./pages/admin/ResetPassword";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="packages" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminPackages /></ProtectedRoute>} />
               <Route path="services" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminServices /></ProtectedRoute>} />
               <Route path="gallery" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminGallery /></ProtectedRoute>} />
+              <Route path="testimonials" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><AdminTestimonials /></ProtectedRoute>} />
 
               {/* Admin + Manager + Sales routes */}
               <Route path="inquiries" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales']}><AdminInquiries /></ProtectedRoute>} />

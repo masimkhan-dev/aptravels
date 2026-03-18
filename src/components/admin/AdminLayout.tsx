@@ -29,6 +29,7 @@ const links: NavLink[] = [
   { to: "/admin/services", icon: Briefcase, label: "Services", roles: ['admin', 'manager'] },
   { to: "/admin/gallery", icon: Images, label: "Ads & Promotions", roles: ['admin', 'manager'] },
   { to: "/admin/settings", icon: Settings, label: "Site Settings", roles: ['admin'] },
+  { to: "/admin/testimonials", icon: MessageSquare, label: "Testimonials", roles: ['admin', 'manager'] },
   { to: "/admin/staff", icon: UserCog, label: "Staff", roles: ['admin'] },
   { to: "/", icon: Globe, label: "View Website", roles: ['admin', 'manager', 'sales', 'ops'] },
 ];

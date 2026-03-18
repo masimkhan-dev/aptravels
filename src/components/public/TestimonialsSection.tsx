@@ -3,55 +3,40 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { FadeUp } from "@/components/ui/MotionWrappers";
 
-const testimonials = [
-  {
-    name: "Haji Muhammad Arif",
-    location: "Nowshera, KPK",
-    rating: 5,
-    text: "Akbar Pura Travels ne hamara Umrah ka safar bilkul aasan kar dia. Sab kuch pehle se arrange tha — tickets, hotel, aur visa. Bahut shukriya!",
-    tag: "Umrah Package",
-    initials: "HA",
-  },
-  {
-    name: "Shaheen Bibi",
-    location: "Peshawar, KPK",
-    rating: 5,
-    text: "Bahut honest aur professional team hai. Humne Dubai family tour book kiya tha — price bilkul sahi aur koi hidden charges nahi thay. Highly recommended!",
-    tag: "Dubai Family Tour",
-    initials: "SB",
-  },
-  {
-    name: "Tariq Mehmood",
-    location: "Mardan, KPK",
-    rating: 5,
-    text: "Gulf Air ka ticket book karaya tha — price bohot competitive thi aur e-ticket same day mili. Next time bhi inhi se karunga. Top service!",
-    tag: "International Flight",
-    initials: "TM",
-  },
-  {
-    name: "Nasreen Khatoon",
-    location: "Charsadda, KPK",
-    rating: 5,
-    text: "Hajj 2024 ke liye sab kuch Akbar Pura Travels ne handle kiya. Bahut care ke sath aur time pe sab kuch complete hua. Allah unhe jazak e khair de.",
-    tag: "Hajj Services",
-    initials: "NK",
-  },
-  {
-    name: "Imran Gul",
-    location: "Swabi, KPK",
-    rating: 5,
-    text: "Mera Saudi visa application unhone handle kiya — 7 din mein visa aa gaya! Office mein baithe baithay sab ho gaya. Best travel agency in Nowshera.",
-    tag: "Visa Processing",
-    initials: "IG",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+
+interface Testimonial {
+  id: string;
+  name: string;
+  location: string | null;
+  rating: number;
+  text: string;
+  tag: string | null;
+  initials: string | null;
+}
 
 export default function TestimonialsSection() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const fetchTestimonials = async () => {
+    const { data } = await supabase
+      .from("testimonials" as any)
+      .select("*")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false });
+    
+    if (data && data.length > 0) {
+      setTestimonials(data as any);
+    }
+    setLoading(false);
+  };
+
   const startAutoPlay = () => {
+    if (testimonials.length <= 1) return;
     intervalRef.current = setInterval(() => {
       setDirection(1);
       setCurrent((prev) => (prev + 1) % testimonials.length);
@@ -59,16 +44,25 @@ export default function TestimonialsSection() {
   };
 
   useEffect(() => {
-    startAutoPlay();
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    fetchTestimonials();
   }, []);
 
+  useEffect(() => {
+    if (testimonials.length > 1) {
+      startAutoPlay();
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [testimonials]);
+
   const go = (dir: 1 | -1) => {
+    if (testimonials.length <= 1) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
     setDirection(dir);
     setCurrent((prev) => (prev + dir + testimonials.length) % testimonials.length);
     startAutoPlay();
   };
+
+  if (loading || testimonials.length === 0) return null;
 
   const t = testimonials[current];
 
