@@ -607,6 +607,7 @@ export default function AdminExpenses() {
                                     placeholder="0.00"
                                     value={form.amount}
                                     onChange={(e) => handleFieldChange("amount", e.target.value)}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                 />
                                 {maxRefundable !== null && Number(form.amount) > maxRefundable && (
                                     <p className="text-[10px] text-destructive font-bold mt-1">

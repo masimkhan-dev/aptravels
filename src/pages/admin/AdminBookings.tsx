@@ -437,14 +437,14 @@ export default function AdminBookings() {
                     <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Package Price *</label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
+                      <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin (Admin Only)</label>
                     <div className="relative">
                       <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                      <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                      <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                     </div>
                   </div>
                 </div>
@@ -471,14 +471,14 @@ export default function AdminBookings() {
                       <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Ticket Price *</label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
+                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
                       <div className="relative">
                         <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                       </div>
                     </div>
                   </div>
@@ -502,14 +502,14 @@ export default function AdminBookings() {
                       <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Service Fee / Visa Cost *</label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} />
+                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
                       <div className="relative">
                         <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} />
+                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
                       </div>
                     </div>
                   </div>

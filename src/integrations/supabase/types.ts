@@ -9,6 +9,87 @@ export type Json =
 export type Database = {
     public: {
         Tables: {
+            agents: {
+                Row: {
+                    id: string
+                    name: string
+                    phone: string | null
+                    notes: string | null
+                    created_at: string
+                    deleted_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    phone?: string | null
+                    notes?: string | null
+                    created_at?: string
+                    deleted_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    name?: string
+                    phone?: string | null
+                    notes?: string | null
+                    created_at?: string
+                    deleted_at?: string | null
+                }
+                Relationships: []
+            }
+            agent_transactions: {
+                Row: {
+                    id: string
+                    agent_id: string
+                    booking_id: string | null
+                    amount: number
+                    direction: 'SEND' | 'RECEIVE'
+                    account_type: 'CASH' | 'BANK'
+                    notes: string | null
+                    created_by: string | null
+                    performed_at: string
+                    is_reversal: boolean | null
+                }
+                Insert: {
+                    id?: string
+                    agent_id: string
+                    booking_id?: string | null
+                    amount: number
+                    direction: 'SEND' | 'RECEIVE'
+                    account_type: 'CASH' | 'BANK'
+                    notes?: string | null
+                    created_by?: string | null
+                    performed_at?: string
+                    is_reversal?: boolean | null
+                }
+                Update: {
+                    id?: string
+                    agent_id?: string
+                    booking_id?: string | null
+                    amount?: number
+                    direction?: 'SEND' | 'RECEIVE'
+                    account_type?: 'CASH' | 'BANK'
+                    notes?: string | null
+                    created_by?: string | null
+                    performed_at?: string
+                    is_reversal?: boolean | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "agent_transactions_agent_id_fkey"
+                        columns: ["agent_id"]
+                        isOneToOne: false
+                        referencedRelation: "agents"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "agent_transactions_booking_id_fkey"
+                        columns: ["booking_id"]
+                        isOneToOne: false
+                        referencedRelation: "bookings"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             audit_logs: {
                 Row: {
                     id: string
@@ -267,6 +348,72 @@ export type Database = {
                 }
                 Relationships: []
             }
+            outgoing_payments: {
+                Row: {
+                    id: string
+                    amount: number
+                    category: 'supplier_payment' | 'operational_expense' | 'customer_refund'
+                    paid_to: string
+                    description: string | null
+                    booking_id: string | null
+                    customer_id: string | null
+                    payment_method: 'cash' | 'bank_transfer' | 'online' | 'cheque'
+                    reference_no: string | null
+                    payment_date: string
+                    created_by: string
+                    created_at: string
+                    updated_at: string
+                    deleted_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    amount: number
+                    category: 'supplier_payment' | 'operational_expense' | 'customer_refund'
+                    paid_to: string
+                    description?: string | null
+                    booking_id?: string | null
+                    customer_id?: string | null
+                    payment_method: 'cash' | 'bank_transfer' | 'online' | 'cheque'
+                    reference_no?: string | null
+                    payment_date?: string
+                    created_by: string
+                    created_at?: string
+                    updated_at?: string
+                    deleted_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    amount?: number
+                    category?: 'supplier_payment' | 'operational_expense' | 'customer_refund'
+                    paid_to?: string
+                    description?: string | null
+                    booking_id?: string | null
+                    customer_id?: string | null
+                    payment_method?: 'cash' | 'bank_transfer' | 'online' | 'cheque'
+                    reference_no?: string | null
+                    payment_date?: string
+                    created_by?: string
+                    created_at?: string
+                    updated_at?: string
+                    deleted_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "outgoing_payments_booking_id_fkey"
+                        columns: ["booking_id"]
+                        isOneToOne: false
+                        referencedRelation: "bookings"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "outgoing_payments_customer_id_fkey"
+                        columns: ["customer_id"]
+                        isOneToOne: false
+                        referencedRelation: "customers"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             packages: {
                 Row: {
                     id: string
@@ -443,6 +590,42 @@ export type Database = {
             }
         }
         Views: {
+            agent_balances: {
+                Row: {
+                    agent_id: string | null
+                    balance: number | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "agent_transactions_agent_id_fkey"
+                        columns: ["agent_id"]
+                        isOneToOne: false
+                        referencedRelation: "agents"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            agent_statements: {
+                Row: {
+                    transaction_id: string | null
+                    agent_id: string | null
+                    date: string | null
+                    direction: string | null
+                    account_type: string | null
+                    amount: number | null
+                    notes: string | null
+                    running_balance: number | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "agent_transactions_agent_id_fkey"
+                        columns: ["agent_id"]
+                        isOneToOne: false
+                        referencedRelation: "agents"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             booking_ledger_view: {
                 Row: {
                     booking_id: string | null
