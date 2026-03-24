@@ -32,7 +32,7 @@ interface BookingDetail {
     visa_step_enumber_generated: boolean;
     visa_step_approved: boolean;
     visa_step_protector_stamp: boolean;
-    visa_step_final_stamping: boolean;
+    visa_step_ticket: boolean;
     margin: number | null;
     customers: { full_name: string; phone: string; address: string; cnic_passport: string };
     packages: { title: string; destination: string; duration: string } | null;

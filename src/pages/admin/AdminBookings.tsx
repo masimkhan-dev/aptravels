@@ -451,7 +451,7 @@ export default function AdminBookings() {
               )}
 
               {bookingType === "Ticket" && (
-                <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="space-y-4 ">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Airline</label>
@@ -486,7 +486,7 @@ export default function AdminBookings() {
               )}
 
               {bookingType === "Visa" && (
-                <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="space-y-4 ">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Target Country</label>

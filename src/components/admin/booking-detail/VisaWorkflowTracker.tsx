@@ -17,7 +17,7 @@ const VISA_STEPS: VisaStep[] = [
   { key: 'visa_step_enumber_generated',  label: 'E-Number Generated' },
   { key: 'visa_step_approved',           label: 'Visa Approved' },
   { key: 'visa_step_protector_stamp',    label: 'Protector Stamp' },
-  { key: 'visa_step_final_stamping',     label: 'Final Stamping' },
+  { key: 'visa_step_ticket',           label: 'Ticket' },
 ];
 
 export interface VisaWorkflowTrackerProps {
@@ -37,7 +37,7 @@ export function VisaWorkflowTracker({
   const progressPercent = (completedCount / VISA_STEPS.length) * 100;
 
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in slide-in-from-top-4 duration-500 mb-8">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mb-8">
       <div className="p-6 border-b border-border bg-blue-500/[0.03] flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">

@@ -63,6 +63,7 @@ export default function AdminAgentLedger() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [selectedAgentBalance, setSelectedAgentBalance] = useState<number | null>(null);
+    const [alreadySentForBooking, setAlreadySentForBooking] = useState<number>(0);
 
     // Filters
     const [filterAgent, setFilterAgent] = useState<string>("all");
@@ -172,6 +173,26 @@ export default function AdminAgentLedger() {
     useEffect(() => {
         fetchAgentBalance(form.agent_id);
     }, [form.agent_id]);
+
+    useEffect(() => {
+        const fetchSentForBooking = async () => {
+            if (!form.booking_id || form.booking_id === 'none') {
+                setAlreadySentForBooking(0);
+                return;
+            }
+            const { data } = await supabase
+                .from('agent_transactions' as any)
+                .select('amount, direction')
+                .eq('booking_id', form.booking_id);
+            const sent = (data as any[])?.reduce((sum: number, tx: any) => {
+                if (tx.direction === 'SEND') return sum + (tx.amount || 0);
+                if (tx.direction === 'RECEIVE') return sum - (tx.amount || 0);
+                return sum;
+            }, 0) ?? 0;
+            setAlreadySentForBooking(Math.max(0, sent));
+        };
+        fetchSentForBooking();
+    }, [form.booking_id]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -311,10 +332,13 @@ export default function AdminAgentLedger() {
             </div>
 
             {showForm && (
-                <Card className="border-gold/20 shadow-xl rounded-[2rem] overflow-hidden animate-in slide-in-from-top-4">
-                    <CardHeader className="bg-muted/30 pb-6">
-                        <CardTitle className="text-xl font-black italic flex items-center gap-2">
-                            Settlement Entry
+                <Card className={`shadow-xl rounded-[2rem] border overflow-hidden transition-colors duration-500
+                    ${form.direction === 'SEND' ? 'border-orange-500/40 bg-orange-500/[0.01]' : 'border-emerald-500/40 bg-emerald-500/[0.01]'}
+                `}>
+                    <CardHeader className={`border-b border-border/10 pb-6 ${form.direction === 'SEND' ? 'bg-orange-500/5' : 'bg-emerald-500/5'}`}>
+                        <CardTitle className={`text-xl font-black italic flex items-center gap-2 ${form.direction === 'SEND' ? 'text-orange-600' : 'text-emerald-600'}`}>
+                            {form.direction === 'SEND' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
+                            {form.direction === 'SEND' ? "Recording Outflow (SEND)" : "Recording Inflow (RECEIVE)"}
                         </CardTitle>
                         <CardDescription>Record a new cash inflow or outflow related to an agent.</CardDescription>
                     </CardHeader>
@@ -331,9 +355,21 @@ export default function AdminAgentLedger() {
                                     </SelectContent>
                                 </Select>
                                 {selectedAgentBalance !== null && (
-                                    <p className={`text-[10px] font-bold mt-1 ml-1 ${selectedAgentBalance >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                                        Current Khata: Rs {Math.abs(selectedAgentBalance).toLocaleString()} {selectedAgentBalance >= 0 ? "(Agent Owes)" : "(We Owe)"}
-                                    </p>
+                                    <div className={`mt-3 p-3 rounded-xl border flex flex-col gap-1 shadow-inner transition-colors duration-500
+                                        ${selectedAgentBalance >= 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-80">
+                                            <span>Current Khata</span>
+                                            <span>{selectedAgentBalance >= 0 ? "Agent Owes Us" : "We Owe Agent"}</span>
+                                        </div>
+                                        <div className="font-display text-2xl font-black tracking-tight flex justify-between items-end">
+                                            <span>Rs {Math.abs(selectedAgentBalance).toLocaleString()}</span>
+                                            {selectedAgentBalance < 0 && form.direction === 'SEND' && (
+                                                <button type="button" onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })} className="text-[10px] uppercase font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 px-2 py-1 rounded transition-colors text-red-600 dark:text-red-400">
+                                                    Settle Full
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
 
@@ -403,24 +439,82 @@ export default function AdminAgentLedger() {
                             </div>
 
                             {form.direction === 'SEND' && form.booking_id && form.booking_id !== 'none' && (
-                                <div className="lg:col-span-3 bg-muted/30 p-5 rounded-xl border border-border/50 text-sm space-y-2 shadow-inner">
-                                    <p className="font-black border-b border-border/50 pb-2 mb-3 uppercase tracking-widest text-[10px] text-muted-foreground flex items-center justify-between">
-                                        Booking Financials Breakdown
-                                        <span className="text-red-500 bg-red-500/10 px-2 py-0.5 rounded">PAYOUT LIMIT APPLIED</span>
-                                    </p>
+                                <div className="lg:col-span-3 bg-muted/30 p-5 rounded-2xl border border-border/50 shadow-inner">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <p className="font-black uppercase tracking-widest text-[10px] text-muted-foreground flex items-center gap-2">
+                                            Booking Financials
+                                        </p>
+                                        <span className="text-[9px] font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                                            Payout limit enforced
+                                        </span>
+                                    </div>
                                     {(() => {
                                         const b = bookings.find(x => x.id === form.booking_id);
                                         if (!b) return null;
+                                        
                                         return (
-                                            <>
-                                                <div className="flex justify-between items-center text-muted-foreground"><span>Customer Invoice Total:</span> <span className="font-medium">Rs {b.total_price.toLocaleString()}</span></div>
-                                                <div className="flex justify-between items-center text-emerald-500"><span>Paid by Customer:</span> <span className="font-medium">Rs {b.total_paid.toLocaleString()}</span></div>
-                                                <div className="flex justify-between items-center text-blue-500 border-b border-border/10 pb-2 mb-2"><span>Agency Profit (Margin):</span> <span className="font-medium">Rs {b.margin.toLocaleString()}</span></div>
-                                                <div className="flex justify-between items-center font-black text-lg">
-                                                    <span>Supplier Cost (Max Payable to Agent):</span>
-                                                    <span>Rs {b.supplier_cost.toLocaleString()}</span>
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                    <div className="bg-background p-3 rounded-xl border border-border/50">
+                                                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Invoice Total</div>
+                                                        <div className="text-sm font-black">Rs {b.total_price.toLocaleString()}</div>
+                                                    </div>
+                                                    <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
+                                                        <div className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-1">Customer Paid</div>
+                                                        <div className="text-sm font-black text-emerald-700">Rs {b.total_paid.toLocaleString()}</div>
+                                                    </div>
+                                                    <div className="bg-blue-500/5 p-3 rounded-xl border border-blue-500/20">
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-1">Agency Profit</div>
+                                                        <div className="text-sm font-black text-blue-700">Rs {b.margin.toLocaleString()}</div>
+                                                    </div>
                                                 </div>
-                                            </>
+                                                
+                                                <div className="bg-orange-500/10 p-4 rounded-xl border border-orange-500/20 space-y-3">
+                                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                                        <div>
+                                                            <div className="text-[10px] text-orange-600 dark:text-orange-400 font-black uppercase tracking-widest mb-1">Supplier Cost (Max Payout Limit)</div>
+                                                            <div className="text-2xl font-black text-orange-700 dark:text-orange-300">Rs {b.supplier_cost.toLocaleString()}</div>
+                                                        </div>
+                                                        <div className="flex flex-col sm:items-end gap-1">
+                                                            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Already Paid to Agent</div>
+                                                            <div className="text-sm font-black text-red-600 dark:text-red-400">- Rs {alreadySentForBooking.toLocaleString()}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="space-y-1">
+                                                        <div className="h-2.5 w-full bg-orange-100 dark:bg-orange-900/30 rounded-full overflow-hidden border border-orange-200/50">
+                                                            <div
+                                                                className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-700"
+                                                                style={{ width: `${Math.min((alreadySentForBooking / (b.supplier_cost || 1)) * 100, 100)}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                            <span>Paid: {Math.round((alreadySentForBooking / (b.supplier_cost || 1)) * 100)}%</span>
+                                                            <span>Remaining: {Math.round(100 - (alreadySentForBooking / (b.supplier_cost || 1)) * 100)}%</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Remaining Balance Row */}
+                                                    <div className="flex items-center justify-between pt-2 border-t border-orange-200/50 dark:border-orange-700/30">
+                                                        <div>
+                                                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-0.5">Remaining Payable</div>
+                                                            <div className={`text-xl font-black ${(b.supplier_cost - alreadySentForBooking) <= 0 ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                                                                Rs {Math.max(0, b.supplier_cost - alreadySentForBooking).toLocaleString()}
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            className="h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 font-bold tracking-wider"
+                                                            onClick={() => setForm({ ...form, amount: Math.max(0, b.supplier_cost - alreadySentForBooking).toString() })}
+                                                            disabled={(b.supplier_cost - alreadySentForBooking) <= 0}
+                                                        >
+                                                            Auto-fill Remaining
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         );
                                     })()}
                                 </div>
@@ -538,7 +632,7 @@ export default function AdminAgentLedger() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap text-right">
-                                                <div className={`text-base font-black ${tx.direction === 'SEND' ? 'text-foreground' : 'text-emerald-500'}`}>
+                                                <div className={`text-base font-black ${tx.direction === 'SEND' ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                                     {tx.direction === 'SEND' ? '-' : '+'} Rs {tx.amount.toLocaleString()}
                                                 </div>
                                             </td>
@@ -574,7 +668,7 @@ export default function AdminAgentLedger() {
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => window.print()}
-                                className="h-8 gap-2 border-border/50 text-muted-foreground mr-6"
+                                className="h-8 gap-2 border-border/50 text-muted-foreground mr-6 print:hidden"
                             >
                                 <Download className="w-3.5 h-3.5" /> Print
                             </Button>
