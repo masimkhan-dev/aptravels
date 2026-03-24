@@ -15,6 +15,7 @@ const VISA_STEPS: VisaStep[] = [
   { key: 'visa_step_passport_received',  label: 'Passport Received' },
   { key: 'visa_step_medical_cleared',    label: 'Medical Cleared' },
   { key: 'visa_step_enumber_generated',  label: 'E-Number Generated' },
+  { key: 'visa_step_approved',           label: 'Visa Approved' },
   { key: 'visa_step_protector_stamp',    label: 'Protector Stamp' },
   { key: 'visa_step_final_stamping',     label: 'Final Stamping' },
 ];
@@ -46,7 +47,7 @@ export function VisaWorkflowTracker({
             </h3>
           </div>
           <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">
-            System Tracked • Stage {completedCount}/5
+            System Tracked • Stage {completedCount}/{VISA_STEPS.length}
           </p>
         </div>
         <div className="bg-blue-600/10 px-4 py-2 rounded-xl border border-blue-600/20">
@@ -66,7 +67,7 @@ export function VisaWorkflowTracker({
       </div>
 
       {/* Step Buttons */}
-      <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="p-6 grid grid-cols-2 lg:grid-cols-6 gap-3">
         {VISA_STEPS.map((step, idx) => {
           const isDone = Boolean(booking[step.key]);
           return (

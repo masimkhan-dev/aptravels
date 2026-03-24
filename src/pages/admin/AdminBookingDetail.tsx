@@ -30,6 +30,7 @@ interface BookingDetail {
     visa_step_passport_received: boolean;
     visa_step_medical_cleared: boolean;
     visa_step_enumber_generated: boolean;
+    visa_step_approved: boolean;
     visa_step_protector_stamp: boolean;
     visa_step_final_stamping: boolean;
     margin: number | null;
@@ -214,6 +215,50 @@ export default function AdminBookingDetail() {
         setUpdatingMargin(false);
     };
 
+    // --- Book Edit Price Logic ---
+    const [isEditingPrice, setIsEditingPrice] = useState(false);
+    const [editPriceValue, setEditPriceValue] = useState("");
+    const [updatingPrice, setUpdatingPrice] = useState(false);
+    const [editPriceReason, setEditPriceReason] = useState("");
+
+    const openEditPriceModal = () => {
+        setEditPriceValue(String(booking?.total_price || 0));
+        setEditPriceReason("");
+        setIsEditingPrice(true);
+    };
+
+    const handleUpdatePrice = async () => {
+        if (!booking) return;
+        const newPrice = Number(editPriceValue);
+        if (isNaN(newPrice) || newPrice < 0) {
+            toast.error("Please enter a valid positive number.");
+            return;
+        }
+        if (editPriceReason.trim().length < 5) {
+            toast.error("Please provide a valid reason (min 5 chars).");
+            return;
+        }
+
+        setUpdatingPrice(true);
+        try {
+            const { data, error } = await (supabase.rpc as any)('rpc_update_booking_total_price', {
+                p_booking_id: booking.id,
+                p_new_total_price: newPrice,
+                p_reason: editPriceReason.trim()
+            });
+
+            if (error) throw error;
+            
+            toast.success("Booking price successfully updated and ledgers adjusted.");
+            setIsEditingPrice(false);
+            fetchData();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to update price.");
+        } finally {
+            setUpdatingPrice(false);
+        }
+    };
+
     const totalPaid = payments.filter(p => !p.voided).reduce((s, p) => s + p.amount_paid, 0);
     const balance = (booking?.total_price || 0) - totalPaid;
     const validPayments = payments.filter(p => !p.voided);
@@ -312,6 +357,7 @@ export default function AdminBookingDetail() {
                             onVoidReasonChange={setVoidReason}
                             onVoidConfirm={handleVoidConfirm}
                             onVoidCancel={() => setVoidTargetId(null)}
+                            onOpenEditPrice={openEditPriceModal}
                         />
                     </div>
 
@@ -655,6 +701,70 @@ export default function AdminBookingDetail() {
                     <div style={{ height: '4px', background: '#c9a227' }} />
                 </div>
             </div>
+
+            {/* Edit Price Confirmation Modal */}
+            {isEditingPrice && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 no-print">
+                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 border-b border-border bg-blue-500/5 flex items-center justify-between">
+                            <div className="flex-1">
+                                <h3 className="font-bold text-blue-600">Edit Booking Total Price</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">This will automatically adjust ledgers and agent balances (if linked).</p>
+                            </div>
+                            <button onClick={() => setIsEditingPrice(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="text-xs font-bold uppercase text-muted-foreground mb-2 block">
+                                    New Total Price (Rs) <span className="text-blue-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">Rs</span>
+                                    <input
+                                        type="number"
+                                        value={editPriceValue}
+                                        onChange={e => setEditPriceValue(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full pl-9 pr-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg"
+                                        onWheel={e => e.currentTarget.blur()}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold uppercase text-muted-foreground mb-2 block">
+                                    Reason for Edit <span className="text-blue-500">*</span>
+                                </label>
+                                <textarea
+                                    value={editPriceReason}
+                                    onChange={e => setEditPriceReason(e.target.value)}
+                                    minLength={5}
+                                    rows={2}
+                                    placeholder="Briefly explain the price change..."
+                                    className="w-full px-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setIsEditingPrice(false)}
+                                    className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted font-bold text-sm transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdatePrice}
+                                    disabled={updatingPrice || editPriceReason.trim().length < 5 || !editPriceValue}
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
+                                >
+                                    {updatingPrice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                    {updatingPrice ? 'Saving...' : 'Update Price'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

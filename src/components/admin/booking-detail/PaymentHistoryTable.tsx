@@ -51,6 +51,8 @@ export interface PaymentHistoryTableProps {
   onVoidReasonChange: (v: string) => void;
   onVoidConfirm:      () => void;
   onVoidCancel:       () => void;
+
+  onOpenEditPrice?:   () => void;
 }
 
 export function PaymentHistoryTable({
@@ -68,6 +70,7 @@ export function PaymentHistoryTable({
   onOpenVoid,
   voidTargetId, voidReason, voiding,
   onVoidReasonChange, onVoidConfirm, onVoidCancel,
+  onOpenEditPrice
 }: PaymentHistoryTableProps) {
   const isPrivileged = role === 'admin' || role === 'manager';
   const isTerminal   = bookingStatus === 'Completed' || bookingStatus === 'Voided';
@@ -166,8 +169,19 @@ export function PaymentHistoryTable({
           ))}
         </div>
 
-        <div className="p-6 bg-muted/10 border-t border-border flex justify-between items-center font-bold">
-          <span className="text-sm">Total Quote: Rs {Number(totalPrice).toLocaleString()}</span>
+        <div className="p-6 bg-muted/10 border-t border-border flex justify-between items-center font-bold flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm">Total Quote: Rs {Number(totalPrice).toLocaleString()}</span>
+            {isPrivileged && !isTerminal && onOpenEditPrice && (
+              <button 
+                onClick={onOpenEditPrice}
+                className="text-[10px] text-blue-500 hover:text-blue-600 uppercase tracking-widest font-black bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded transition-colors"
+                title="Edit Total Price"
+              >
+                Edit
+              </button>
+            )}
+          </div>
           <span className="text-sm text-green-500">Net Received: Rs {totalPaid.toLocaleString()}</span>
         </div>
       </div>
