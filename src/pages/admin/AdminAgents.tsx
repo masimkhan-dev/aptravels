@@ -6,6 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 interface Agent {
     id: string;
@@ -30,7 +42,11 @@ export default function AdminAgents() {
         setLoading(true);
         try {
             // Get agents
-            let query = supabase.from("agents").select("*").order("name", { ascending: true });
+            let query = supabase.from("agents")
+                .select("*")
+                .is("deleted_at", null)
+                .order("name", { ascending: true });
+
             if (search) {
                 query = query.ilike("name", `%${search}%`);
             }
@@ -104,6 +120,26 @@ export default function AdminAgents() {
         setShowModal(true);
     };
 
+    const handleDeleteAgent = async (agent: Agent) => {
+        if (Number(agent.balance) !== 0) {
+            toast.error(`Cannot delete agent with active balance (Rs ${agent.balance}).`);
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from("agents")
+                .update({ deleted_at: new Date().toISOString() })
+                .eq("id", agent.id);
+
+            if (error) throw error;
+            toast.success("Agent profile deleted successfully.");
+            fetchAgents();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to delete agent.");
+        }
+    };
+
     return (
         <div className="space-y-6 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -170,11 +206,42 @@ export default function AdminAgents() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full rounded-xl gap-2 h-10 border-dashed"
+                                            className="grow rounded-xl gap-2 h-10 border-dashed"
                                             onClick={() => handleEdit(agent)}
                                         >
                                             <User className="w-3.5 h-3.5" /> Edit Profile
                                         </Button>
+
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={Number(agent.balance) !== 0}
+                                                    className="w-12 rounded-xl h-10 border-dashed text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 disabled:opacity-30"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent className="rounded-[2rem]">
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Delete Agent Profile?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This will remove <strong>{agent.name}</strong> from the active registry. 
+                                                        This action is safe because the agent has no outstanding balance.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction 
+                                                        onClick={() => handleDeleteAgent(agent)}
+                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+                                                    >
+                                                        Delete Profile
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </div>
                             </CardContent>

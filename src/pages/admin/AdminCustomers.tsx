@@ -96,12 +96,32 @@ export default function AdminCustomers() {
     };
 
     const handleDeleteCustomer = async (id: string) => {
-        const { error } = await supabase.from("customers").delete().eq("id", id);
-        if (!error) {
-            toast.success("Customer profile deleted.");
+        try {
+            // Safety Check: Check for active or completed bookings
+            const { data: activeBookings, error: checkError } = await supabase
+                .from("bookings")
+                .select("id")
+                .eq("customer_id", id)
+                .neq("status", "Voided");
+
+            if (checkError) throw checkError;
+
+            if (activeBookings && activeBookings.length > 0) {
+                toast.error(`Cannot delete customer with ${activeBookings.length} active or completed booking(s). Please void them first.`);
+                return;
+            }
+
+            const { error: deleteError } = await supabase
+                .from("customers")
+                .update({ deleted_at: new Date().toISOString() })
+                .eq("id", id);
+
+            if (deleteError) throw deleteError;
+
+            toast.success("Customer profile deleted successfully.");
             setSelectedCustomer(null);
             fetchCustomers();
-        } else {
+        } catch (error: any) {
             toast.error(error.message || "Failed to delete customer.");
         }
     };
