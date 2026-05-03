@@ -22,6 +22,7 @@ import AdminExpenses from "./pages/admin/AdminExpenses";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminAgentLedger from "./pages/admin/AdminAgentLedger";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminHelp from "./pages/admin/AdminHelp";
 import ResetPassword from "./pages/admin/ResetPassword";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
@@ -63,6 +64,7 @@ const App = () => (
               {/* All roles can access bookings */}
               <Route path="bookings" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales', 'ops']}><AdminBookings /></ProtectedRoute>} />
               <Route path="bookings/:id" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales', 'ops']}><AdminBookingDetail /></ProtectedRoute>} />
+              <Route path="help" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'sales', 'ops']}><AdminHelp /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -5,7 +5,7 @@ import { useRole, UserRole } from "@/hooks/useRole";
 import {
   LayoutDashboard, Package, Briefcase, MessageSquare, LogOut, Menu, X,
   Images, Users, CreditCard, UserCog, Globe, Settings, Receipt, Wallet,
-  ChevronDown, Key, Loader2, Search
+  ChevronDown, Key, Loader2, Search, HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -75,6 +75,14 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/gallery", icon: Images, label: "Ads & Promotions", roles: ["admin", "manager"] },
       { to: "/admin/testimonials", icon: MessageSquare, label: "Testimonials", roles: ["admin", "manager"] },
       { to: "/", icon: Globe, label: "View Website", roles: ["admin", "manager", "sales", "ops"] },
+    ],
+  },
+  {
+    id: "support",
+    label: "Support",
+    roles: ["admin", "manager", "sales", "ops"],
+    items: [
+      { to: "/admin/help", icon: HelpCircle, label: "System Guide", roles: ["admin", "manager", "sales", "ops"] },
     ],
   },
 ];
