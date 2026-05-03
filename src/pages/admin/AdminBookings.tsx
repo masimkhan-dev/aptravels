@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Tag, Calendar, User, ArrowRight, Loader2, DollarSign, X, Briefcase, Plane, FileText, Search, BookOpen, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetDescription 
+} from "@/components/ui/sheet";
+import { useRole } from "@/hooks/useRole";
+import { 
+  Plus, Search, Loader2, X, Briefcase, Plane, FileText, BookOpen, ArrowRight 
+} from "lucide-react";
 
 interface Booking {
   booking_id: string;
@@ -21,6 +31,7 @@ interface Customer { id: string; full_name: string; phone: string; }
 interface Package { id: string; title: string; price: number; }
 
 export default function AdminBookings() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -33,10 +44,15 @@ export default function AdminBookings() {
   const [filterStatus, setFilterStatus] = useState("all");
 
   // New Booking State
-  const [showModal, setShowModal] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickName, setQuickName] = useState("");
+  const [quickPhone, setQuickPhone] = useState("");
+  const { role } = useRole();
 
   // Form State
   const [bookingType, setBookingType] = useState<"Package" | "Ticket" | "Visa">("Package");
@@ -93,23 +109,28 @@ export default function AdminBookings() {
     if (page === 0) fetchDropdowns();
   }, [search, filterType, filterStatus, page]);
 
-  const handleQuickAddCustomer = async (name: string, phone: string) => {
+  const handleQuickAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickName || !quickPhone) return;
     try {
       const { data, error } = await supabase
         .from("customers")
-        .insert([{ full_name: name, phone }])
+        .insert([{ full_name: quickName, phone: quickPhone }])
         .select()
         .single();
 
       if (error) throw error;
 
       if (data) {
-        toast.success(`Customer "${name}" created!`);
+        toast.success(`Customer "${quickName}" created!`);
         // Refresh customer list
         const { data: allCustomers } = await supabase.from("customers_safe_view" as any).select("id, full_name, phone").order("full_name");
         setCustomers((allCustomers as any) || []);
         // Select the newly created customer
         setSelectedCustomer(data.id);
+        setShowQuickAdd(false);
+        setQuickName("");
+        setQuickPhone("");
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to add customer");
@@ -149,7 +170,7 @@ export default function AdminBookings() {
       toast.error(error.message || "Failed to create booking. Check your permissions.");
     } else {
       toast.success("Booking registered successfully.");
-      setShowModal(false);
+      setShowSheet(false);
       resetForm();
       fetchBookings();
     }
@@ -172,10 +193,11 @@ export default function AdminBookings() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed": return "bg-green-500/10 text-green-500 ring-1 ring-green-500/20";
-      case "Voided": return "bg-destructive/10 text-destructive ring-1 ring-destructive/20";
-      case "Confirmed": return "bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20";
-      default: return "bg-gold/10 text-gold ring-1 ring-gold/20";
+      case "Voided": return "bg-red-50 text-red-700 border-red-100";
+      case "Pending": return "bg-amber-50 text-amber-800 border-amber-100";
+      case "Confirmed": return "bg-blue-50 text-blue-700 border-blue-100";
+      case "Completed": return "bg-green-50 text-green-700 border-green-100";
+      default: return "bg-slate-50 text-slate-600 border-slate-100";
     }
   };
 
@@ -190,16 +212,16 @@ export default function AdminBookings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h2 className="text-xl font-display font-bold text-foreground">Booking Ledger</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{bookings.length} records</p>
+          <h2 className="text-3xl font-display font-black text-foreground tracking-tight">Booking Ledger</h2>
+          <p className="text-sm text-muted-foreground mt-1 font-medium">{totalCount} total records in system</p>
         </div>
         <button
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-gold-gradient text-secondary rounded-lg font-semibold text-sm shadow-gold hover:opacity-90 transition-all"
+          onClick={() => { resetForm(); setWizardStep(1); setShowSheet(true); }}
+          className="flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-xl font-bold text-sm shadow-lg hover:opacity-90 transition-all"
         >
-          <Plus className="w-4 h-4" /> New Sale (Package/Ticket/Visa)
+          <Plus className="w-4 h-4" /> New Sale Entry
         </button>
       </div>
 
@@ -253,100 +275,84 @@ export default function AdminBookings() {
         </div>
       </div>
 
-      {/* Booking Cards */}
-      <div className="grid gap-3">
+      {/* Booking Table */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin text-gold" />
-            <p className="text-sm animate-pulse">Loading ledger...</p>
+            <p className="text-sm font-medium">Loading ledger...</p>
           </div>
         ) : bookings.length === 0 ? (
-          <div className="bg-card p-16 text-center rounded-2xl border border-dashed border-border">
-            <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="font-bold text-foreground mb-1">
-              {hasActiveFilters ? "No results found" : "No bookings yet"}
+          <div className="p-20 text-center">
+            <BookOpen className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+            <p className="font-bold text-lg text-foreground">No records found</p>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-1">
+              Adjust your filters or start a new booking entry to see results here.
             </p>
-            <p className="text-sm text-muted-foreground">
-              {hasActiveFilters ? "Try adjusting your search or filters." : "Create your first sale using the button above."}
-            </p>
-            {hasActiveFilters && (
-              <button
-                onClick={() => { setSearch(""); setFilterType("all"); setFilterStatus("all"); }}
-                className="mt-4 text-xs text-gold hover:underline font-bold"
-              >
-                Clear all filters
-              </button>
-            )}
           </div>
         ) : (
-          <>
-            <div className="bg-muted/50 text-muted-foreground text-[10px] uppercase font-black tracking-widest px-5 py-3 rounded-t-xl flex items-center border-b border-border">
-              <span className="w-12 text-center">S.No</span>
-              <span className="flex-1">Booking Detail</span>
-              <span className="w-24 text-center hidden md:block">Financials</span>
-              <span className="w-8"></span>
-            </div>
-            {bookings.map((b, index) => (
-              <Link
-                to={`/admin/bookings/${b.booking_id}`}
-                key={b.booking_id}
-                className="bg-card p-5 border-x border-b border-border first:border-t hover:border-gold/40 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="flex flex-col items-center gap-1 min-w-[3rem]">
-                    <span className="text-[10px] font-bold text-muted-foreground/60">#{(page * PAGE_SIZE) + index + 1}</span>
-                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-gold font-black text-[9px] ring-1 ring-border shadow-sm group-hover:ring-gold/30 transition-all">
-                      {b.invoice_no?.split('-').pop()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className="text-xs font-mono text-muted-foreground uppercase">{b.invoice_no}</span>
-                      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-black uppercase bg-muted text-muted-foreground border border-border">
-                        {getTypeIcon(b.booking_type)} {b.booking_type}
-                      </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getStatusColor(b.status)}`}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border">
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-left w-16">No.</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-left">Invoice / Client</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-left">Service Type</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-left">Status</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-right">Total Price</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-right">Paid</th>
+                  <th className="text-[10px] uppercase font-black tracking-widest text-muted-foreground px-4 py-4 text-right">Balance</th>
+                  <th className="px-4 py-4 w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {bookings.map((b, index) => (
+                  <tr 
+                    key={b.booking_id} 
+                    className="hover:bg-muted/20 transition-colors group cursor-pointer"
+                    onClick={() => navigate(`/admin/bookings/${b.booking_id}`)}
+                  >
+                    <td className="px-4 py-3 text-xs font-bold text-muted-foreground/60">
+                      {(page * PAGE_SIZE) + index + 1}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-mono font-bold text-muted-foreground uppercase">{b.invoice_no}</span>
+                        <span className="text-sm font-black text-foreground group-hover:text-gold transition-colors">{b.customer_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-muted border border-border group-hover:border-gold/30 transition-colors">
+                          {getTypeIcon(b.booking_type)}
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground">{b.booking_type}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${getStatusColor(b.status)}`}>
                         {b.status}
                       </span>
-                    </div>
-                    <h3 className="font-bold flex items-center gap-2 text-foreground">
-                      <User className="w-3.5 h-3.5 text-muted-foreground" />
-                      {b.customer_name}
-                      {b.booking_type === 'Ticket' && b.pnr_number && (
-                        <span className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded-md font-mono ml-1">PNR: {b.pnr_number}</span>
-                      )}
-                      {b.booking_type === 'Visa' && b.visa_country && (
-                        <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-md font-bold ml-1">{b.visa_country} Visa</span>
-                      )}
-                    </h3>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-6 px-4 flex-1 max-w-sm">
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Total</p>
-                    <p className="text-sm font-black text-foreground">Rs {Number(b.total_price).toLocaleString()}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Paid</p>
-                    <p className="text-sm font-black text-green-500">Rs {Number(b.total_paid).toLocaleString()}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase text-muted-foreground mb-1 tracking-wider font-bold">Balance</p>
-                    <p className={`text-sm font-black ${b.balance_due > 0 ? "text-gold" : "text-muted-foreground/40 line-through"}`}>
-                      {b.balance_due > 0 ? `Rs ${Number(b.balance_due).toLocaleString()}` : "Cleared ✓"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-gold-gradient group-hover:text-secondary transition-all">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-bold text-foreground">
+                      Rs {Number(b.total_price).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-bold text-green-600">
+                      Rs {Number(b.total_paid).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className={`text-sm font-black ${b.balance_due > 0 ? "text-amber-600" : "text-slate-300"}`}>
+                        {b.balance_due > 0 ? `Rs ${Number(b.balance_due).toLocaleString()}` : "Cleared"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -375,168 +381,244 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* New Booking Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 my-8">
-            <div className="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-display font-bold text-foreground">ERP Entry Record</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Akbar Pura Travels System</p>
+      {/* New Booking Slide-out Wizard */}
+      <Sheet open={showSheet} onOpenChange={setShowSheet}>
+        <SheetContent className="sm:max-w-xl w-full p-0 flex flex-col h-full border-none shadow-2xl">
+          <SheetHeader className="p-8 bg-slate-900 text-white shrink-0">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center border border-gold/30">
+                <Plus className="w-4 h-4 text-gold" />
               </div>
-              <button type="button" onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
+              <SheetTitle className="text-2xl font-black text-white italic tracking-tight">New Booking Entry</SheetTitle>
             </div>
+            <SheetDescription className="text-slate-400 font-medium">
+              Complete the 3-step process to record a new sale in the system.
+            </SheetDescription>
+            
+            {/* Step Indicator */}
+            <div className="flex items-center gap-4 mt-8">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${wizardStep === s ? "bg-gold text-secondary" : wizardStep > s ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500"}`}>
+                    {wizardStep > s ? "✓" : s}
+                  </div>
+                  <div className={`h-1 w-8 rounded-full ${wizardStep > s ? "bg-emerald-500" : "bg-slate-800"}`} />
+                </div>
+              ))}
+            </div>
+          </SheetHeader>
 
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              {/* Type Toggle */}
-              <div className="flex bg-muted p-1 rounded-xl mb-6 font-bold">
-                <button type="button" className={`flex-1 py-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1.5 ${bookingType === "Package" ? "bg-card shadow-sm text-gold" : "text-muted-foreground"}`} onClick={() => setBookingType("Package")}>
-                  <Briefcase className="w-3 h-3" /> Umrah
-                </button>
-                <button type="button" className={`flex-1 py-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1.5 ${bookingType === "Ticket" ? "bg-card shadow-sm text-gold" : "text-muted-foreground"}`} onClick={() => setBookingType("Ticket")}>
-                  <Plane className="w-3 h-3" /> Ticket
-                </button>
-                <button type="button" className={`flex-1 py-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1.5 ${bookingType === "Visa" ? "bg-card shadow-sm text-gold" : "text-muted-foreground"}`} onClick={() => setBookingType("Visa")}>
-                  <FileText className="w-3 h-3" /> Work Visa
-                </button>
-              </div>
+          <div className="flex-1 overflow-y-auto p-8">
+            <form onSubmit={handleCreate} className="space-y-8">
+              {/* Step 1: Customer Selection */}
+              {wizardStep === 1 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Client Selection</label>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowQuickAdd(!showQuickAdd)}
+                        className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-tight"
+                      >
+                        {showQuickAdd ? "Cancel Quick Add" : "+ Register New Client"}
+                      </button>
+                    </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between ml-1">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Select Customer *</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const name = prompt("Enter New Customer Name:");
-                      const phone = prompt("Enter Phone Number:");
-                      if (name && phone) {
-                        handleQuickAddCustomer(name, phone);
-                      }
-                    }}
-                    className="text-[10px] font-black text-gold hover:underline uppercase tracking-tighter"
+                    {showQuickAdd ? (
+                      <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl space-y-4 animate-in zoom-in-95 duration-200">
+                        <p className="text-[10px] font-black text-blue-600 uppercase">Quick Add New Customer</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input 
+                            placeholder="Full Name" 
+                            className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-400"
+                            value={quickName}
+                            onChange={e => setQuickName(e.target.value)}
+                          />
+                          <input 
+                            placeholder="Phone (03xx...)" 
+                            className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-400"
+                            value={quickPhone}
+                            onChange={e => setQuickPhone(e.target.value)}
+                          />
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={handleQuickAddCustomer}
+                          className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all"
+                        >
+                          Save & Select Client
+                        </button>
+                      </div>
+                    ) : (
+                      <select 
+                        required 
+                        className="w-full h-14 px-4 rounded-xl border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground transition-all" 
+                        value={selectedCustomer} 
+                        onChange={e => setSelectedCustomer(e.target.value)}
+                      >
+                        <option value="">-- Click to choose client --</option>
+                        {customers.map(c => <option key={c.id} value={c.id}>{c.full_name} • {c.phone}</option>)}
+                      </select>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Service Category</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { id: "Package", label: "Umrah", icon: Briefcase },
+                        { id: "Ticket", label: "Ticket", icon: Plane },
+                        { id: "Visa", label: "Work Visa", icon: FileText }
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setBookingType(t.id as any)}
+                          className={`flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-all ${bookingType === t.id ? "bg-slate-50 border-gold shadow-sm" : "border-border hover:border-muted-foreground/30"}`}
+                        >
+                          <t.icon className={`w-5 h-5 ${bookingType === t.id ? "text-gold" : "text-muted-foreground"}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-wider ${bookingType === t.id ? "text-slate-900" : "text-muted-foreground"}`}>{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Service Details */}
+              {wizardStep === 2 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  {bookingType === "Package" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Umrah Package Selection</label>
+                        <select className="w-full h-14 px-4 rounded-xl border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold" value={selectedPackage} onChange={e => { setSelectedPackage(e.target.value); const pkg = packages.find(p => p.id === e.target.value); if (pkg) setTotalPrice(pkg.price.toString()); }}>
+                          <option value="">-- Custom Deal (Manual Price) --</option>
+                          {packages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {bookingType === "Ticket" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Airline</label>
+                          <input placeholder="e.g. PIA" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold" value={airlineName} onChange={e => setAirlineName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">PNR Reference</label>
+                          <input placeholder="Enter 6-digit PNR" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold font-mono uppercase" value={pnrNumber} onChange={e => setPnrNumber(e.target.value.toUpperCase())} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Sector</label>
+                        <input placeholder="e.g. ISB-JED-ISB" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold" value={ticketSector} onChange={e => setTicketSector(e.target.value)} />
+                      </div>
+                    </div>
+                  )}
+
+                  {bookingType === "Visa" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Target Country</label>
+                          <input placeholder="e.g. Saudi Arabia" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold" value={visaCountry} onChange={e => setVisaCountry(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Profession</label>
+                          <input placeholder="e.g. Electrician" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold" value={visaProfession} onChange={e => setVisaProfession(e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Departure / Stamping Date</label>
+                    <input type="date" className="w-full h-12 px-4 rounded-xl border border-border text-sm font-bold" value={travelDate} onChange={e => setTravelDate(e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Financials */}
+              {wizardStep === 3 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="p-6 bg-slate-50 border border-border rounded-2xl space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Total Sale Price (PKR) *</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">Rs</span>
+                        <input 
+                          required 
+                          type="number" 
+                          placeholder="0.00" 
+                          className="w-full h-16 pl-12 pr-4 rounded-xl border border-border bg-white text-2xl font-black text-slate-900 outline-none focus:ring-2 focus:ring-gold" 
+                          value={totalPrice} 
+                          onChange={e => setTotalPrice(e.target.value)} 
+                          onWheel={e => e.currentTarget.blur()} 
+                        />
+                      </div>
+                    </div>
+
+                    {(role === 'admin' || role === 'manager') && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-emerald-600 italic">Expected Profit Margin</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-emerald-300">Rs</span>
+                          <input 
+                            type="number" 
+                            placeholder="0.00" 
+                            className="w-full h-14 pl-12 pr-4 rounded-xl border border-emerald-100 bg-emerald-50/30 text-lg font-black text-emerald-700 outline-none focus:ring-2 focus:ring-emerald-500" 
+                            value={margin} 
+                            onChange={e => setMargin(e.target.value)} 
+                            onWheel={e => e.currentTarget.blur()} 
+                          />
+                        </div>
+                        <p className="text-[9px] text-emerald-600/60 font-medium ml-1 italic">Hidden from counter staff and sales agents.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Controls */}
+              <div className="pt-8 border-t border-border flex gap-3">
+                {wizardStep > 1 && (
+                  <button 
+                    type="button" 
+                    onClick={() => setWizardStep(s => s - 1)}
+                    className="flex-1 h-14 rounded-xl border border-border font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all"
                   >
-                    + Add New Profile
+                    Back
                   </button>
-                </div>
-                <select required className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={selectedCustomer} onChange={e => setSelectedCustomer(e.target.value)}>
-                  <option value="">-- Choose Customer --</option>
-                  {customers.map(c => <option key={c.id} value={c.id}>{c.full_name} ({c.phone})</option>)}
-                </select>
-              </div>
-
-              {bookingType === "Package" && (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Umrah Package</label>
-                    <select className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={selectedPackage} onChange={e => { setSelectedPackage(e.target.value); const pkg = packages.find(p => p.id === e.target.value); if (pkg) setTotalPrice(pkg.price.toString()); }}>
-                      <option value="">-- Custom Deal --</option>
-                      {packages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Package Price *</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin (Admin Only)</label>
-                    <div className="relative">
-                      <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                      <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {bookingType === "Ticket" && (
-                <div className="space-y-4 ">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Airline</label>
-                      <input placeholder="e.g. Saudi Air" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={airlineName} onChange={e => setAirlineName(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">PNR Ref</label>
-                      <input placeholder="6-Digit" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground font-mono" value={pnrNumber} onChange={e => setPnrNumber(e.target.value.toUpperCase())} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Sector</label>
-                      <input placeholder="e.g. KHI-JED" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={ticketSector} onChange={e => setTicketSector(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Ticket Price *</label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
-                      <div className="relative">
-                        <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {bookingType === "Visa" && (
-                <div className="space-y-4 ">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Target Country</label>
-                      <input placeholder="e.g. UAE / Saudi / Qatar" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={visaCountry} onChange={e => setVisaCountry(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Visa Profession</label>
-                      <input placeholder="e.g. Driver / Electrician" className="w-full px-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={visaProfession} onChange={e => setVisaProfession(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Service Fee / Visa Cost *</label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input required type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm font-bold text-foreground" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-emerald-600 ml-1">Profit Margin</label>
-                      <div className="relative">
-                        <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                        <input type="number" placeholder="0.00" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-emerald-100 bg-emerald-50/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" value={margin} onChange={e => setMargin(e.target.value)} onWheel={e => e.currentTarget.blur()} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground ml-1">Departure / Stamping Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="date" className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-background focus:border-gold focus:ring-1 focus:ring-gold outline-none text-sm text-foreground" value={travelDate} onChange={e => setTravelDate(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-6 border-t border-border mt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted font-bold text-sm text-foreground transition-all">
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving || !selectedCustomer} className="flex-1 px-4 py-2.5 bg-gold-gradient text-secondary rounded-lg font-bold text-sm shadow-gold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all">
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Register Sale
-                </button>
+                )}
+                
+                {wizardStep < 3 ? (
+                  <button 
+                    type="button" 
+                    disabled={wizardStep === 1 && !selectedCustomer}
+                    onClick={() => setWizardStep(s => s + 1)}
+                    className="flex-[2] h-14 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-xl disabled:opacity-30 transition-all"
+                  >
+                    Continue to {wizardStep === 1 ? "Details" : "Financials"}
+                  </button>
+                ) : (
+                  <button 
+                    type="submit" 
+                    disabled={saving || !totalPrice}
+                    className="flex-[2] h-14 bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-200 disabled:opacity-30 transition-all flex items-center justify-center gap-3"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Confirm & Save Entry
+                  </button>
+                )}
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

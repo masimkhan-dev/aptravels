@@ -1,16 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-    PlusCircle, Loader2, Search, ArrowUpRight, ArrowDownLeft,
-    Wallet, History, Info, X, User, Receipt, RotateCcw, FileText, Download
+    PlusCircle, Loader2, ArrowUpRight, ArrowDownLeft,
+    Wallet, History, X, User, Receipt, RotateCcw, FileText, Download, Printer
 } from "lucide-react";
+import { AgentStatementPrint } from "@/components/admin/AgentStatementPrint";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -64,6 +73,7 @@ export default function AdminAgentLedger() {
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [selectedAgentBalance, setSelectedAgentBalance] = useState<number | null>(null);
     const [alreadySentForBooking, setAlreadySentForBooking] = useState<number>(0);
+    const [reversalTarget, setReversalTarget] = useState<AgentTransaction | null>(null);
 
     // Filters
     const [filterAgent, setFilterAgent] = useState<string>("all");
@@ -73,6 +83,9 @@ export default function AdminAgentLedger() {
     const [statementLoading, setStatementLoading] = useState(false);
     const [showStatement, setShowStatement] = useState(false);
     const [statementAgentName, setStatementAgentName] = useState("");
+ 
+    const handlePrint = () => window.print();
+    const selectedAgentObj = agents.find(a => a.id === filterAgent);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -222,7 +235,10 @@ export default function AdminAgentLedger() {
 
             if (error) throw error;
 
-            toast.success("Transaction recorded successfully.");
+            toast.success("Transaction recorded safely", {
+                description: `Settlement of Rs ${Number(form.amount).toLocaleString()} has been posted. The agent ledger and cash accounts have been updated successfully.`,
+                duration: 5000,
+            });
             setShowForm(false);
             setForm({ ...EMPTY_FORM });
             fetchData();
@@ -234,8 +250,13 @@ export default function AdminAgentLedger() {
     };
 
     const handleReversal = async (tx: AgentTransaction) => {
-        if (!window.confirm(`Are you sure you want to REVERSE this Rs ${tx.amount.toLocaleString()} transaction? This will post an opposite entry to cancel its effect safely.`)) return;
+        setReversalTarget(tx);
+    };
 
+    const confirmReversal = async () => {
+        if (!reversalTarget) return;
+        const tx = reversalTarget;
+        setReversalTarget(null);
         try {
             const { error } = await supabase
                 .from("agent_transactions" as any)
@@ -315,226 +336,303 @@ export default function AdminAgentLedger() {
 
     return (
         <div className="space-y-6 pb-20">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="font-display text-3xl font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent italic">Agent Ledger</h1>
-                    <p className="text-muted-foreground text-sm">Track settlements, advances and cash flows with your business agents.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        onClick={() => setShowForm(!showForm)}
-                        className={`rounded-xl shadow-lg gap-2 transition-all ${showForm ? 'bg-secondary' : 'bg-gold hover:bg-gold/90 text-white'}`}
-                    >
-                        {showForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                        {showForm ? "Cancel Entry" : "New Settlement"}
-                    </Button>
-                </div>
-            </div>
+            {/* Reversal Confirmation Dialog */}
+            <AlertDialog open={!!reversalTarget} onOpenChange={(open) => { if (!open) setReversalTarget(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Reverse Transaction?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will post a counter-entry of <strong>Rs {reversalTarget?.amount.toLocaleString()}</strong> to safely cancel the original transaction's effect. This cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmReversal} className="bg-destructive hover:bg-destructive/90 text-white">
+                            Yes, Reverse It
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-            {showForm && (
-                <Card className={`shadow-xl rounded-[2rem] border overflow-hidden transition-colors duration-500
-                    ${form.direction === 'SEND' ? 'border-orange-500/40 bg-orange-500/[0.01]' : 'border-emerald-500/40 bg-emerald-500/[0.01]'}
-                `}>
-                    <CardHeader className={`border-b border-border/10 pb-6 ${form.direction === 'SEND' ? 'bg-orange-500/5' : 'bg-emerald-500/5'}`}>
-                        <CardTitle className={`text-xl font-black italic flex items-center gap-2 ${form.direction === 'SEND' ? 'text-orange-600' : 'text-emerald-600'}`}>
-                            {form.direction === 'SEND' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
-                            {form.direction === 'SEND' ? "Recording Outflow (SEND)" : "Recording Inflow (RECEIVE)"}
-                        </CardTitle>
-                        <CardDescription>Record a new cash inflow or outflow related to an agent.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Select Agent</label>
-                                <Select value={form.agent_id} onValueChange={(val) => setForm({ ...form, agent_id: val })}>
-                                    <SelectTrigger className="h-12 rounded-xl border-border/50">
-                                        <SelectValue placeholder="Choose Agent..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                {selectedAgentBalance !== null && (
-                                    <div className={`mt-3 p-3 rounded-xl border flex flex-col gap-1 shadow-inner transition-colors duration-500
-                                        ${selectedAgentBalance >= 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
-                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-80">
-                                            <span>Current Khata</span>
-                                            <span>{selectedAgentBalance >= 0 ? "Agent Owes Us" : "We Owe Agent"}</span>
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+                <div>
+                    <h2 className="text-2xl font-display font-black text-foreground tracking-tight">Agent <span className="text-muted-foreground font-medium">Ledger</span></h2>
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                        <Wallet className="w-3 h-3 text-gold" />
+                        Manage settlements, advances and cash flows
+                    </p>
+                </div>
+                
+                <Sheet open={showForm} onOpenChange={setShowForm}>
+                    <SheetTrigger asChild>
+                        <Button className="bg-gold hover:bg-gold/90 text-white font-bold rounded-xl px-6 shadow-gold transition-all">
+                            <PlusCircle className="w-4 h-4 mr-2" /> New Settlement
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent className="w-full sm:max-w-xl overflow-y-auto border-l-gold/20 shadow-2xl">
+                        <SheetHeader className="mb-6">
+                            <SheetTitle className="text-2xl font-display font-black flex items-center gap-2">
+                                <Receipt className="w-6 h-6 text-gold" /> Record Transaction
+                            </SheetTitle>
+                            <SheetDescription>
+                                Post a new cash inflow or outflow for an agent. All entries are recorded in the audit trail.
+                            </SheetDescription>
+                        </SheetHeader>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Agent / Supplier</label>
+                                        <Select value={form.agent_id} onValueChange={(val) => setForm({ ...form, agent_id: val })}>
+                                            <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background">
+                                                <SelectValue placeholder="Choose Agent..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        {selectedAgentBalance !== null && (
+                                            <div className={`mt-3 p-3 rounded-xl border flex flex-col gap-1 shadow-inner transition-colors duration-500
+                                                ${selectedAgentBalance >= 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-80">
+                                                    <span>Current Khata</span>
+                                                    <span>{selectedAgentBalance >= 0 ? "Agent Owes Us" : "We Owe Agent"}</span>
+                                                </div>
+                                                <div className="font-display text-xl font-black tracking-tight flex justify-between items-end">
+                                                    <span>Rs {Math.abs(selectedAgentBalance).toLocaleString()}</span>
+                                                    {selectedAgentBalance < 0 && (
+                                                        <button type="button" onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })} className="text-[10px] uppercase font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 px-2 py-1 rounded transition-colors text-red-600 dark:text-red-400">
+                                                            Settle Full
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Type</label>
+                                            <Select value={form.direction} onValueChange={(val: any) => setForm({ ...form, direction: val })}>
+                                                <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="RECEIVE">Receive (Agent Pays)</SelectItem>
+                                                    <SelectItem value="SEND">Send (We Pay)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <div className="font-display text-2xl font-black tracking-tight flex justify-between items-end">
-                                            <span>Rs {Math.abs(selectedAgentBalance).toLocaleString()}</span>
-                                            {selectedAgentBalance < 0 && form.direction === 'SEND' && (
-                                                <button type="button" onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })} className="text-[10px] uppercase font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 px-2 py-1 rounded transition-colors text-red-600 dark:text-red-400">
-                                                    Settle Full
-                                                </button>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Method</label>
+                                            <Select value={form.account_type} onValueChange={(val: any) => setForm({ ...form, account_type: val })}>
+                                                <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="CASH">Cash Counter</SelectItem>
+                                                    <SelectItem value="BANK">Bank Account</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between ml-1">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount (Rs)</label>
+                                        <span className="text-[9px] font-bold text-gold uppercase tracking-tighter">Enter or select below</span>
+                                    </div>
+                                    <Input
+                                        required
+                                        type="number"
+                                        value={form.amount}
+                                        onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                                        className="h-14 rounded-xl text-2xl font-black border-border/50 bg-muted/20 focus:bg-background transition-colors"
+                                        placeholder="0,000"
+                                    />
+                                    
+                                    {/* Smart Suggestions */}
+                                    {selectedAgentBalance !== null && (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {selectedAgentBalance < 0 && (
+                                                <Button 
+                                                    type="button" 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="h-7 text-[10px] font-bold px-3 rounded-full border-gold/30 hover:bg-gold/10 text-gold"
+                                                    onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })}
+                                                >
+                                                    Full Settlement (Rs {Math.abs(selectedAgentBalance).toLocaleString()})
+                                                </Button>
                                             )}
+                                            {selectedAgentBalance < 0 && (
+                                                <Button 
+                                                    type="button" 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="h-7 text-[10px] font-bold px-3 rounded-full border-border hover:bg-muted"
+                                                    onClick={() => setForm({ ...form, amount: (Math.abs(selectedAgentBalance) / 2).toString() })}
+                                                >
+                                                    Pay Half
+                                                </Button>
+                                            )}
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 text-[10px] font-bold px-3 rounded-full border-border hover:bg-muted"
+                                                onClick={() => setForm({ ...form, amount: "10000" })}
+                                            >
+                                                Rs 10k
+                                            </Button>
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 text-[10px] font-bold px-3 rounded-full border-border hover:bg-muted"
+                                                onClick={() => setForm({ ...form, amount: "50000" })}
+                                            >
+                                                Rs 50k
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Calculation Preview — Psychological Reassurance */}
+                                {form.amount && Number(form.amount) > 0 && selectedAgentBalance !== null && (
+                                    <div className="bg-muted/50 p-4 rounded-2xl border border-dashed border-border/60 animate-in fade-in zoom-in-95 duration-300">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                                            <div className="w-1 h-1 rounded-full bg-gold" />
+                                            Post-Transaction Preview
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs font-medium">
+                                                <span className="text-muted-foreground">Current Balance</span>
+                                                <span className={selectedAgentBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                                                    Rs {selectedAgentBalance.toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between text-xs font-medium">
+                                                <span className="text-muted-foreground">Settlement ({form.direction})</span>
+                                                <span className={form.direction === 'SEND' ? 'text-red-600' : 'text-emerald-600'}>
+                                                    {form.direction === 'SEND' ? '-' : '+'} Rs {Number(form.amount).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <div className="h-px bg-border my-2" />
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Predicted Balance</span>
+                                                <div className="text-right">
+                                                    {(() => {
+                                                        const current = selectedAgentBalance || 0;
+                                                        const change = form.direction === 'SEND' ? Number(form.amount) : -Number(form.amount);
+                                                        const next = current + change;
+                                                        return (
+                                                            <>
+                                                                <div className={`text-xl font-black ${next >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                                    Rs {Math.abs(next).toLocaleString()}
+                                                                </div>
+                                                                <div className="text-[9px] font-bold text-muted-foreground uppercase">
+                                                                    {next >= 0 ? "Agent will owe us" : "We will owe agent"}
+                                                                </div>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
-                            </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Direction</label>
-                                <Select value={form.direction} onValueChange={(val: any) => setForm({ ...form, direction: val })}>
-                                    <SelectTrigger className="h-12 rounded-xl border-border/50">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="RECEIVE">Receive (Agent Pays Us)</SelectItem>
-                                        <SelectItem value="SEND">Send (We Pay Agent)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Link to Booking {form.direction === 'SEND' && "*"}</label>
+                                    <Select value={form.booking_id} onValueChange={(val) => setForm({ ...form, booking_id: val })}>
+                                        <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background">
+                                            <SelectValue placeholder="Search Booking..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">-- No Booking --</SelectItem>
+                                            {bookings.map(b => (
+                                                <SelectItem key={b.id} value={b.id}>
+                                                    {b.invoice_no} ({b.customer_name})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Amount (Rs)</label>
-                                <Input
-                                    required
-                                    type="number"
-                                    value={form.amount}
-                                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                                    className="h-12 rounded-xl text-lg font-bold border-border/50"
-                                    placeholder="0,000"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Account / Method</label>
-                                <Select value={form.account_type} onValueChange={(val: any) => setForm({ ...form, account_type: val })}>
-                                    <SelectTrigger className="h-12 rounded-xl border-border/50">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CASH">Cash Counter</SelectItem>
-                                        <SelectItem value="BANK">Bank Account</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Link to Booking {form.direction === 'SEND' && "*"}</label>
-                                <Select value={form.booking_id} onValueChange={(val) => setForm({ ...form, booking_id: val })}>
-                                    <SelectTrigger className="h-12 rounded-xl border-border/50">
-                                        <SelectValue placeholder="Search Booking..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">-- No Booking --</SelectItem>
-                                        {bookings.map(b => (
-                                            <SelectItem key={b.id} value={b.id}>
-                                                {b.invoice_no} ({b.customer_name})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2 lg:col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Narration / Notes</label>
-                                <Input
-                                    value={form.notes}
-                                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                                    className="h-12 rounded-xl border-border/50"
-                                    placeholder="Details of settlement..."
-                                />
-                            </div>
-
-                            {form.direction === 'SEND' && form.booking_id && form.booking_id !== 'none' && (
-                                <div className="lg:col-span-3 bg-muted/30 p-5 rounded-2xl border border-border/50 shadow-inner">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <p className="font-black uppercase tracking-widest text-[10px] text-muted-foreground flex items-center gap-2">
-                                            Booking Financials
-                                        </p>
-                                        <span className="text-[9px] font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
-                                            Payout limit enforced
-                                        </span>
-                                    </div>
-                                    {(() => {
-                                        const b = bookings.find(x => x.id === form.booking_id);
-                                        if (!b) return null;
-                                        
-                                        return (
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                    <div className="bg-background p-3 rounded-xl border border-border/50">
-                                                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Invoice Total</div>
-                                                        <div className="text-sm font-black">Rs {b.total_price.toLocaleString()}</div>
+                                {form.direction === 'SEND' && form.booking_id && form.booking_id !== 'none' && (
+                                    <div className="bg-orange-500/5 p-4 rounded-2xl border border-orange-500/20 space-y-4 animate-in slide-in-from-top-2">
+                                        {(() => {
+                                            const b = bookings.find(x => x.id === form.booking_id);
+                                            if (!b) return null;
+                                            
+                                            return (
+                                                <>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-600">Supplier Cost Check</span>
+                                                        <span className="text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded border border-orange-200">Rs {b.supplier_cost.toLocaleString()} Max</span>
                                                     </div>
-                                                    <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
-                                                        <div className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-1">Customer Paid</div>
-                                                        <div className="text-sm font-black text-emerald-700">Rs {b.total_paid.toLocaleString()}</div>
-                                                    </div>
-                                                    <div className="bg-blue-500/5 p-3 rounded-xl border border-blue-500/20">
-                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-1">Agency Profit</div>
-                                                        <div className="text-sm font-black text-blue-700">Rs {b.margin.toLocaleString()}</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="bg-orange-500/10 p-4 rounded-xl border border-orange-500/20 space-y-3">
-                                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                                        <div>
-                                                            <div className="text-[10px] text-orange-600 dark:text-orange-400 font-black uppercase tracking-widest mb-1">Supplier Cost (Max Payout Limit)</div>
-                                                            <div className="text-2xl font-black text-orange-700 dark:text-orange-300">Rs {b.supplier_cost.toLocaleString()}</div>
-                                                        </div>
-                                                        <div className="flex flex-col sm:items-end gap-1">
-                                                            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Already Paid to Agent</div>
-                                                            <div className="text-sm font-black text-red-600 dark:text-red-400">- Rs {alreadySentForBooking.toLocaleString()}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Progress Bar */}
-                                                    <div className="space-y-1">
-                                                        <div className="h-2.5 w-full bg-orange-100 dark:bg-orange-900/30 rounded-full overflow-hidden border border-orange-200/50">
+                                                    
+                                                    <div className="space-y-2">
+                                                        <div className="h-1.5 w-full bg-orange-100 rounded-full overflow-hidden">
                                                             <div
-                                                                className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-700"
+                                                                className="h-full bg-orange-500 transition-all duration-700"
                                                                 style={{ width: `${Math.min((alreadySentForBooking / (b.supplier_cost || 1)) * 100, 100)}%` }}
                                                             />
                                                         </div>
-                                                        <div className="flex justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                            <span>Paid: {Math.round((alreadySentForBooking / (b.supplier_cost || 1)) * 100)}%</span>
-                                                            <span>Remaining: {Math.round(100 - (alreadySentForBooking / (b.supplier_cost || 1)) * 100)}%</span>
+                                                        <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-muted-foreground">
+                                                            <span>Paid: Rs {alreadySentForBooking.toLocaleString()}</span>
+                                                            <span className="text-emerald-600">Due: Rs {Math.max(0, b.supplier_cost - alreadySentForBooking).toLocaleString()}</span>
                                                         </div>
                                                     </div>
 
-                                                    {/* Remaining Balance Row */}
-                                                    <div className="flex items-center justify-between pt-2 border-t border-orange-200/50 dark:border-orange-700/30">
-                                                        <div>
-                                                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-0.5">Remaining Payable</div>
-                                                            <div className={`text-xl font-black ${(b.supplier_cost - alreadySentForBooking) <= 0 ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-300'}`}>
-                                                                Rs {Math.max(0, b.supplier_cost - alreadySentForBooking).toLocaleString()}
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            className="h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 font-bold tracking-wider"
-                                                            onClick={() => setForm({ ...form, amount: Math.max(0, b.supplier_cost - alreadySentForBooking).toString() })}
-                                                            disabled={(b.supplier_cost - alreadySentForBooking) <= 0}
-                                                        >
-                                                            Auto-fill Remaining
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="w-full h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10 font-bold"
+                                                        onClick={() => setForm({ ...form, amount: Math.max(0, b.supplier_cost - alreadySentForBooking).toString() })}
+                                                        disabled={(b.supplier_cost - alreadySentForBooking) <= 0}
+                                                    >
+                                                        Auto-fill Remaining Payout
+                                                    </Button>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Narration / Notes</label>
+                                    <Input
+                                        value={form.notes}
+                                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                                        className="h-11 rounded-xl border-border/50 bg-background"
+                                        placeholder="Reason for this transaction..."
+                                    />
                                 </div>
-                            )}
+                            </div>
 
-                            <div className="lg:col-span-3 pt-4 flex justify-end">
+                            <div className="pt-4">
                                 <Button
                                     type="submit"
                                     disabled={submitting}
-                                    className="h-12 px-12 bg-gold hover:bg-gold/90 text-white rounded-xl shadow-lg font-bold uppercase tracking-widest transition-all"
+                                    className="w-full h-14 bg-gold hover:bg-gold/90 text-white rounded-2xl shadow-lg font-black uppercase tracking-[0.2em] transition-all"
                                 >
-                                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Commit Entry"}
+                                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm & Save Entry"}
                                 </Button>
+                                <p className="text-[9px] text-center text-muted-foreground mt-4 italic">
+                                    * This transaction will be immediately reflected in the agent ledger.
+                                </p>
                             </div>
                         </form>
-                    </CardContent>
-                </Card>
-            )}
+                    </SheetContent>
+                </Sheet>
+            </div>
 
-            <Card className="rounded-[2rem] border-border/50 shadow-lg overflow-hidden">
+            <Card className="rounded-[2rem] border-border/50 shadow-lg overflow-hidden no-print">
                 <CardHeader className="border-b border-border/50 bg-muted/10 pb-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -547,6 +645,16 @@ export default function AdminAgentLedger() {
                             </div>
                         </div>
                         <div className="w-full md:w-auto flex items-center gap-2">
+                            {filterAgent !== 'all' && (
+                                <Button 
+                                    variant="outline" 
+                                    className="h-10 rounded-xl border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10 font-bold gap-2 transition-all no-print"
+                                    onClick={handlePrint}
+                                >
+                                    <Printer className="w-4 h-4" />
+                                    PDF Statement
+                                </Button>
+                            )}
                             <Select value={filterAgent} onValueChange={setFilterAgent}>
                                 <SelectTrigger className="h-10 w-full md:w-64 rounded-xl">
                                     <SelectValue placeholder="All Agents" />
@@ -573,13 +681,13 @@ export default function AdminAgentLedger() {
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-muted/30 border-b border-border/30">
+                            <thead className="bg-muted/50 border-b border-border/30">
                                 <tr>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Date / User</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Agent & Details</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Value (Rs)</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Action</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Entry Log</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Transaction Details</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Flow</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Settlement Amount</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Safety</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/30">
@@ -597,56 +705,74 @@ export default function AdminAgentLedger() {
                                     </tr>
                                 ) : (
                                     transactions.map((tx) => (
-                                        <tr key={tx.id} className="hover:bg-muted/20 transition-colors">
+                                        <tr key={tx.id} className="hover:bg-muted/10 transition-colors group">
                                             <td className="px-6 py-5 whitespace-nowrap">
-                                                <div className="text-sm font-bold flex items-center gap-1">
-                                                    {new Date(tx.performed_at).toLocaleDateString()}
-                                                </div>
-                                                <div className="text-[10px] text-muted-foreground uppercase opacity-70">
-                                                    {new Date(tx.performed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-black text-muted-foreground">
+                                                        {new Date(tx.performed_at).getDate()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-black text-foreground">
+                                                            {new Date(tx.performed_at).toLocaleDateString('en-PK', { month: 'short', year: 'numeric' })}
+                                                        </div>
+                                                        <div className="text-[10px] text-muted-foreground font-medium uppercase">
+                                                            {new Date(tx.performed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <div className="text-sm font-black italic flex items-center gap-2">
-                                                    <User className="w-3 h-3 text-gold" /> {tx.agent_name}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="text-sm font-black text-foreground flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                                                        {tx.agent_name}
+                                                    </div>
                                                     {tx.invoice_no ? (
-                                                        <span className="flex items-center gap-1 text-blue-500 font-medium">
+                                                        <div className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 inline-flex items-center gap-1.5 w-fit">
                                                             <Receipt className="w-3 h-3" /> {tx.invoice_no}: {tx.customer_name}
-                                                        </span>
+                                                        </div>
                                                     ) : (
-                                                        <span className="italic opacity-60">Personal Settlement</span>
+                                                        <div className="text-[10px] text-muted-foreground font-medium italic opacity-60 ml-3.5">
+                                                            Personal / Global Settlement
+                                                        </div>
+                                                    )}
+                                                    {tx.notes && (
+                                                        <div className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded border border-border/50 ml-3.5 max-w-xs truncate">
+                                                            {tx.notes}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                {tx.notes && <div className="text-[10px] bg-muted/40 px-2 py-0.5 rounded mt-2 inline-block border border-border/50">{tx.notes}</div>}
-                                                {tx.is_reversal && <div className="text-[10px] bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded mt-2 inline-block border border-red-500/20 ml-2">REVERSAL</div>}
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
-                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest italic border ${tx.direction === 'SEND'
+                                            <td className="px-6 py-5 whitespace-nowrap text-center">
+                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${tx.direction === 'SEND'
                                                     ? 'bg-red-500/10 text-red-500 border-red-500/20'
                                                     : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                                     }`}>
                                                     {tx.direction === 'SEND' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
-                                                    {tx.direction} ({tx.account_type})
+                                                    {tx.direction}
+                                                </div>
+                                                <div className="text-[8px] font-black text-muted-foreground mt-1 uppercase tracking-widest opacity-60">
+                                                    via {tx.account_type}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap text-right">
-                                                <div className={`text-base font-black ${tx.direction === 'SEND' ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                                <div className={`text-base font-black tracking-tight ${tx.direction === 'SEND' ? 'text-red-600' : 'text-emerald-600'}`}>
                                                     {tx.direction === 'SEND' ? '-' : '+'} Rs {tx.amount.toLocaleString()}
                                                 </div>
+                                                {tx.is_reversal && (
+                                                    <span className="text-[8px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">REVERSED ENTRY</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap text-center">
                                                 {!tx.is_reversal && (
                                                     <Button
-                                                        variant="outline"
+                                                        variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleReversal(tx)}
-                                                        className="h-8 gap-1.5 rounded-lg border-red-500/20 hover:bg-red-500/10 hover:text-red-600 text-muted-foreground transition-all"
-                                                        title="Reverse this transaction"
+                                                        className="h-8 w-8 p-0 rounded-full hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
+                                                        title="Reverse (Void) this transaction"
                                                     >
-                                                        <RotateCcw className="w-3.5 h-3.5" />
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider">Void</span>
+                                                        <RotateCcw className="w-4 h-4" />
                                                     </Button>
                                                 )}
                                             </td>
@@ -729,6 +855,16 @@ export default function AdminAgentLedger() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Print Only Component */}
+            {filterAgent !== 'all' && selectedAgentObj && (
+                <AgentStatementPrint 
+                    agentName={selectedAgentObj.name}
+                    agentPhone={selectedAgentObj.phone || ""}
+                    balance={selectedAgentBalance || 0}
+                    transactions={transactions}
+                />
+            )}
         </div>
     );
 }

@@ -142,10 +142,10 @@ export default function AdminAgents() {
 
     return (
         <div className="space-y-6 pb-20">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                 <div>
-                    <h1 className="font-display text-3xl font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent italic">Agents Registry</h1>
-                    <p className="text-muted-foreground text-sm">Manage your external agents and track their commercial status.</p>
+                    <h1 className="font-display text-4xl font-black text-foreground tracking-tight">Agents Registry</h1>
+                    <p className="text-muted-foreground text-sm font-medium mt-1">Manage external agents and track commercial status.</p>
                 </div>
                 <Button onClick={() => { setEditingAgent(null); setFormData({ name: "", phone: "", notes: "" }); setShowModal(true); }} className="bg-gold hover:bg-gold/90 text-white rounded-xl shadow-lg shadow-gold/20 gap-2">
                     <Plus className="w-4 h-4" /> Add Agent
@@ -253,15 +253,15 @@ export default function AdminAgents() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-secondary/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in transition-all">
-                    <Card className="w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95">
-                        <CardHeader className="bg-gold text-white pb-8">
+                    <Card className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 border-none">
+                        <CardHeader className="bg-card border-b border-border pb-6">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-2xl font-black italic">{editingAgent ? "Update Profile" : "Register Agent"}</CardTitle>
-                                <Button variant="ghost" size="icon" onClick={() => setShowModal(false)} className="text-white hover:bg-white/10 rounded-full">
+                                <CardTitle className="text-xl font-bold text-foreground">{editingAgent ? "Update Profile" : "Register Agent"}</CardTitle>
+                                <Button variant="ghost" size="icon" onClick={() => setShowModal(false)} className="text-muted-foreground hover:bg-muted rounded-full">
                                     <X className="w-5 h-5" />
                                 </Button>
                             </div>
-                            <CardDescription className="text-white/80">{editingAgent ? "Modify details for " + editingAgent.name : "Create a new agent account for ledger tracking."}</CardDescription>
+                            <CardDescription className="text-muted-foreground">{editingAgent ? "Modify details for " + editingAgent.name : "Create a new agent account for ledger tracking."}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-8">
                             <form onSubmit={handleSaveAgent} className="space-y-6">
@@ -295,8 +295,8 @@ export default function AdminAgents() {
                                     />
                                 </div>
                                 <div className="pt-4">
-                                    <Button type="submit" className="w-full h-12 bg-gold hover:bg-gold/90 text-white rounded-xl shadow-lg shadow-gold/20 font-bold uppercase tracking-widest transition-all hover:scale-[1.02]">
-                                        {editingAgent ? "Update Account" : "Activate Agent Account"}
+                                    <Button type="submit" className="w-full h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-xl font-bold uppercase tracking-widest transition-all">
+                                        {editingAgent ? "Update Account" : "Save Agent"}
                                     </Button>
                                 </div>
                             </form>
