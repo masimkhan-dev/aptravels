@@ -7,41 +7,41 @@
 @layer base {
   :root {
     --background: 210 20% 98%;
-    --foreground: 213 50% 15%;
+    --foreground: 220 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 213 50% 15%;
+    --card-foreground: 220 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 50% 15%;
+    --popover-foreground: 220 40% 12%;
 
     --primary: 218 75% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 213 60% 15%;
+    --secondary: 215 50% 12%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 95%;
-    --muted-foreground: 213 20% 45%;
+    --muted-foreground: 215 16% 40%;
 
-    --accent: 43 78% 46%;
-    --accent-foreground: 213 60% 10%;
+    --accent: 38 80% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 30% 90%;
-    --input: 214 30% 90%;
-    --ring: 218 75% 36%;
+    --border: 214 25% 88%;
+    --input: 214 25% 88%;
+    --ring: 38 80% 40%;
 
     --radius: 0.75rem;
 
-    --navy: 213 60% 15%;
+    --navy: 215 50% 12%;
     --navy-light: 213 50% 22%;
     --blue: 218 75% 36%;
     --blue-light: 218 70% 50%;
-    --gold: 43 78% 46%;
-    --gold-light: 43 70% 60%;
+    --gold: 38 80% 40%;
+    --gold-light: 40 75% 55%;
     --gold-deep: 38 85% 35%;
 
     --gradient-hero: linear-gradient(135deg, hsl(213 60% 12%) 0%, hsl(218 75% 32%) 55%, hsl(213 55% 20%) 100%);
@@ -57,14 +57,14 @@
     --font-display: 'Playfair Display', serif;
     --font-body: 'Inter', sans-serif;
 
-    --sidebar-background: 213 60% 15%;
+    --sidebar-background: 215 50% 12%;
     --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 43 78% 46%;
-    --sidebar-primary-foreground: 213 60% 10%;
+    --sidebar-primary: 38 80% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 213 50% 22%;
     --sidebar-accent-foreground: 210 20% 95%;
     --sidebar-border: 213 40% 25%;
-    --sidebar-ring: 43 78% 46%;
+    --sidebar-ring: 38 80% 40%;
   }
 
   .dark {
@@ -286,10 +286,9 @@
   /* ====================================================
      GLOBAL FOCUS-VISIBLE — WCAG AA Keyboard Accessibility
   ==================================================== */
-  :focus-visible {
-    outline: 2px solid hsl(var(--gold));
-    outline-offset: 2px;
-    border-radius: 0.375rem;
+  *:focus-visible {
+    outline: 2px solid hsl(var(--gold)) !important;
+    outline-offset: 2px !important;
   }
 
   /* ====================================================

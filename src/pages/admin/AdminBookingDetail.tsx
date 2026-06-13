@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
     ArrowLeft, Printer, DollarSign, Calendar, Eye, EyeOff, User,
     ShieldCheck, X, CheckCircle2, History, Loader2, Package, Plane, Ticket, FileText, Check, Globe,
-    FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert, TrendingUp
+    FileSignature, UploadCloud, Stamp, ExternalLink, ShieldAlert, TrendingUp, Download, Edit2
 } from "lucide-react";
 import { AGENCY } from "@/lib/constants";
 import { PaymentHistoryTable } from "@/components/admin/booking-detail/PaymentHistoryTable";
@@ -83,6 +83,66 @@ export default function AdminBookingDetail() {
     const [isEditingMargin, setIsEditingMargin] = useState(false);
     const [editMarginValue, setEditMarginValue] = useState("");
     const [updatingMargin, setUpdatingMargin] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
+
+    const [showEditOpsModal, setShowEditOpsModal] = useState(false);
+    const [updatingOps, setUpdatingOps] = useState(false);
+    const [opsFormData, setOpsFormData] = useState({
+        pnr_number: "",
+        airline_name: "",
+        ticket_sector: "",
+        visa_country: "",
+        visa_profession: "",
+        travel_date: ""
+    });
+
+    const handleOpenEditOps = () => {
+        if (!booking) return;
+        setOpsFormData({
+            pnr_number: booking.pnr_number || "",
+            airline_name: booking.airline_name || "",
+            ticket_sector: booking.ticket_sector || "",
+            visa_country: booking.visa_country || "",
+            visa_profession: booking.visa_profession || "",
+            travel_date: booking.travel_date || ""
+        });
+        setShowEditOpsModal(true);
+    };
+
+    const handleSaveOps = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!booking) return;
+        setUpdatingOps(true);
+        try {
+            const payload: any = {};
+            if (booking.booking_type === "Ticket") {
+                payload.pnr_number = opsFormData.pnr_number;
+                payload.airline_name = opsFormData.airline_name;
+                payload.ticket_sector = opsFormData.ticket_sector;
+                payload.travel_date = opsFormData.travel_date || null;
+            } else if (booking.booking_type === "Visa") {
+                payload.visa_country = opsFormData.visa_country;
+                payload.visa_profession = opsFormData.visa_profession;
+                payload.travel_date = opsFormData.travel_date || null;
+            } else if (booking.booking_type === "Package") {
+                payload.travel_date = opsFormData.travel_date || null;
+            }
+
+            const { error } = await supabase
+                .from("bookings")
+                .update(payload)
+                .eq("id", booking.id);
+
+            if (error) throw error;
+            toast.success("Operational details updated successfully.");
+            setShowEditOpsModal(false);
+            fetchData();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to update details.");
+        } finally {
+            setUpdatingOps(false);
+        }
+    };
 
     const fetchData = async () => {
         const { data: b, error: bError } = await (supabase.from("bookings" as any) as any)
@@ -143,7 +203,7 @@ export default function AdminBookingDetail() {
         const amount = Number(payAmount);
         if (!payAmount || amount <= 0) return;
         if (amount > balance) {
-            toast.error(`Payment of Rs ${amount.toLocaleString()} exceeds the remaining balance of Rs ${balance.toLocaleString()}.`);
+            toast.error(`Payment of PKR ${amount.toLocaleString()} exceeds the remaining balance of PKR ${balance.toLocaleString()}.`);
             return;
         }
         setPaying(true);
@@ -154,7 +214,7 @@ export default function AdminBookingDetail() {
         if (error) {
             toast.error(error.message?.replace('CRITICAL_ERROR: ', '') || "Payment rejected.");
         } else {
-            toast.success(`Rs ${amount.toLocaleString()} recorded successfully.`);
+            toast.success(`PKR ${amount.toLocaleString()} recorded successfully.`);
             setPayAmount("");
             fetchData();
         }
@@ -259,6 +319,61 @@ export default function AdminBookingDetail() {
         }
     };
 
+    const downloadPDF = () => {
+        setPdfLoading(true);
+        const invoiceEl = document.getElementById("invoice-print-area");
+        if (!invoiceEl) {
+            toast.error("Invoice print element not found.");
+            setPdfLoading(false);
+            return;
+        }
+        const originalDisplay = invoiceEl.style.display;
+        const originalClass = invoiceEl.className;
+        invoiceEl.style.display = "block";
+        invoiceEl.className = "";
+        
+        const executeDownload = () => {
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `Invoice_${invoiceNumber}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            (window as any).html2pdf().from(invoiceEl).set(opt).save()
+                .then(() => {
+                    invoiceEl.style.display = originalDisplay;
+                    invoiceEl.className = originalClass;
+                    setPdfLoading(false);
+                    toast.success("PDF downloaded successfully!");
+                })
+                .catch((err: any) => {
+                    invoiceEl.style.display = originalDisplay;
+                    invoiceEl.className = originalClass;
+                    setPdfLoading(false);
+                    console.error("PDF generation error:", err);
+                    toast.error("Failed to generate PDF invoice.");
+                });
+        };
+
+        if ((window as any).html2pdf) {
+            executeDownload();
+        } else {
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+            script.onload = () => {
+                executeDownload();
+            };
+            script.onerror = () => {
+                invoiceEl.style.display = originalDisplay;
+                invoiceEl.className = originalClass;
+                setPdfLoading(false);
+                toast.error("Failed to load PDF library. Please try again or use Print Invoice.");
+            };
+            document.body.appendChild(script);
+        }
+    };
+
     const totalPaid = payments.filter(p => !p.voided).reduce((s, p) => s + p.amount_paid, 0);
     const balance = (booking?.total_price || 0) - totalPaid;
     const validPayments = payments.filter(p => !p.voided);
@@ -313,9 +428,19 @@ export default function AdminBookingDetail() {
                             />
                             <h1 className="text-3xl font-display font-bold">Ledger: {booking.customers.full_name}</h1>
                         </div>
-                        <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 bg-gold-gradient text-secondary rounded-xl font-bold hover:opacity-90 transition-all shadow-gold">
+                        <div className="flex items-center gap-2">
+                        <button 
+                            onClick={downloadPDF} 
+                            disabled={pdfLoading}
+                            className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 transition-all border border-slate-800 shrink-0"
+                        >
+                            {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin text-gold" /> : <Download className="w-4 h-4 text-gold" />}
+                            Download PDF
+                        </button>
+                        <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 bg-gold-gradient text-secondary rounded-xl font-bold hover:opacity-90 transition-all shadow-gold shrink-0">
                             <Printer className="w-5 h-5" /> Print Invoice
                         </button>
+                    </div>
                     </div>
                 </div>
 
@@ -425,12 +550,20 @@ export default function AdminBookingDetail() {
                         />
 
                         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                            <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black mb-4 flex items-center gap-2">
-                                {booking.booking_type === 'Ticket' ? <Plane className="w-3.5 h-3.5" /> :
-                                    booking.booking_type === 'Visa' ? <FileText className="w-3.5 h-3.5" /> : <Package className="w-3.5 h-3.5" />}
-                                {booking.booking_type === 'Ticket' ? "Ticket Inventory Details" :
-                                    booking.booking_type === 'Visa' ? "Employment Visa Details" : "Package Logistics"}
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xs text-muted-foreground uppercase tracking-widest font-black flex items-center gap-2">
+                                    {booking.booking_type === 'Ticket' ? <Plane className="w-3.5 h-3.5" /> :
+                                        booking.booking_type === 'Visa' ? <FileText className="w-3.5 h-3.5" /> : <Package className="w-3.5 h-3.5" />}
+                                    {booking.booking_type === 'Ticket' ? "Ticket Inventory Details" :
+                                        booking.booking_type === 'Visa' ? "Employment Visa Details" : "Package Logistics"}
+                                </h3>
+                                <button
+                                    onClick={handleOpenEditOps}
+                                    className="text-xs font-bold text-gold hover:underline flex items-center gap-1"
+                                >
+                                    <Edit2 className="w-3 h-3" /> Edit Info
+                                </button>
+                            </div>
                             {booking.booking_type === 'Ticket' ? (
                                 <div className="space-y-4">
                                     <div className="p-3 bg-muted/40 rounded-xl border border-border/50">
@@ -718,16 +851,16 @@ export default function AdminBookingDetail() {
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="text-xs font-bold uppercase text-muted-foreground mb-2 block">
-                                    New Total Price (Rs) <span className="text-blue-500">*</span>
+                                    New Total Price (PKR) <span className="text-blue-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">Rs</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">PKR</span>
                                     <input
                                         type="number"
                                         value={editPriceValue}
                                         onChange={e => setEditPriceValue(e.target.value)}
                                         placeholder="0.00"
-                                        className="w-full pl-9 pr-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg"
+                                        className="w-full pl-12 pr-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg"
                                         onWheel={e => e.currentTarget.blur()}
                                     />
                                 </div>
@@ -762,6 +895,132 @@ export default function AdminBookingDetail() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Booking Operational Details Modal */}
+            {showEditOpsModal && booking && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-5 border-b border-border bg-muted/30 flex items-center justify-between">
+                            <h3 className="text-xl font-display font-bold">Edit Operational Info</h3>
+                            <button onClick={() => setShowEditOpsModal(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSaveOps} className="p-6 space-y-4">
+                            {booking.booking_type === "Ticket" && (
+                                <>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Airline Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.airline_name}
+                                            onChange={e => setOpsFormData({ ...opsFormData, airline_name: e.target.value })}
+                                            placeholder="e.g. PIA, Gulf Air"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">PNR Reference</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-mono font-bold uppercase"
+                                            value={opsFormData.pnr_number}
+                                            onChange={e => setOpsFormData({ ...opsFormData, pnr_number: e.target.value.toUpperCase() })}
+                                            placeholder="e.g. MH7K9P"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Sector</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.ticket_sector}
+                                            onChange={e => setOpsFormData({ ...opsFormData, ticket_sector: e.target.value })}
+                                            placeholder="e.g. ISB-JED-ISB"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Flight Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.travel_date}
+                                            onChange={e => setOpsFormData({ ...opsFormData, travel_date: e.target.value })}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {booking.booking_type === "Visa" && (
+                                <>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Target Country</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.visa_country}
+                                            onChange={e => setOpsFormData({ ...opsFormData, visa_country: e.target.value })}
+                                            placeholder="e.g. Saudi Arabia"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Profession</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.visa_profession}
+                                            onChange={e => setOpsFormData({ ...opsFormData, visa_profession: e.target.value })}
+                                            placeholder="e.g. Electrician, Driver"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Submission / Stamp Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.travel_date}
+                                            onChange={e => setOpsFormData({ ...opsFormData, travel_date: e.target.value })}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {booking.booking_type === "Package" && (
+                                <>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-foreground/80">Est. Travel Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-gold/50 outline-none text-sm font-bold"
+                                            value={opsFormData.travel_date}
+                                            onChange={e => setOpsFormData({ ...opsFormData, travel_date: e.target.value })}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground italic">Package hotels and logistical details are tied to pre-configured packages. Custom package bookings can only adjust estimated travel dates.</p>
+                                </>
+                            )}
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditOpsModal(false)}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted font-bold text-sm transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updatingOps}
+                                    className="flex-1 px-4 py-2 bg-gold-gradient text-secondary rounded-lg font-bold text-sm disabled:opacity-50 hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {updatingOps ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

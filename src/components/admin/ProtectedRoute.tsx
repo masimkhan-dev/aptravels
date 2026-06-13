@@ -1,6 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useRole, UserRole } from "@/hooks/useRole";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
     allowedRoles: UserRole[];
@@ -14,6 +16,20 @@ interface ProtectedRouteProps {
  */
 export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
     const { role, loading } = useRole();
+    const [shouldRedirect, setShouldRedirect] = useState(false);
+
+    useEffect(() => {
+        if (!loading && role && !allowedRoles.includes(role)) {
+            toast.error("Access Denied", {
+                description: "You do not have administrative clearance to access that module.",
+                duration: 4000,
+            });
+            const timer = setTimeout(() => {
+                setShouldRedirect(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [role, loading, allowedRoles]);
 
     if (loading) {
         return (
@@ -28,7 +44,14 @@ export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) 
     }
 
     if (!allowedRoles.includes(role)) {
-        return <Navigate to="/admin/bookings" replace />;
+        if (shouldRedirect) {
+            return <Navigate to="/admin/bookings" replace />;
+        }
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-gold" />
+            </div>
+        );
     }
 
     return <>{children}</>;

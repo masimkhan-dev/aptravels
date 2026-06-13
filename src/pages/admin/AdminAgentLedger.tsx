@@ -236,7 +236,7 @@ export default function AdminAgentLedger() {
             if (error) throw error;
 
             toast.success("Transaction recorded safely", {
-                description: `Settlement of Rs ${Number(form.amount).toLocaleString()} has been posted. The agent ledger and cash accounts have been updated successfully.`,
+                description: `Settlement of PKR ${Number(form.amount).toLocaleString()} has been posted. The agent ledger and cash accounts have been updated successfully.`,
                 duration: 5000,
             });
             setShowForm(false);
@@ -342,7 +342,7 @@ export default function AdminAgentLedger() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Reverse Transaction?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will post a counter-entry of <strong>Rs {reversalTarget?.amount.toLocaleString()}</strong> to safely cancel the original transaction's effect. This cannot be undone.
+                            This will post a counter-entry of <strong>PKR {reversalTarget?.amount.toLocaleString()}</strong> to safely cancel the original transaction's effect. This cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -401,7 +401,7 @@ export default function AdminAgentLedger() {
                                                     <span>{selectedAgentBalance >= 0 ? "Agent Owes Us" : "We Owe Agent"}</span>
                                                 </div>
                                                 <div className="font-display text-xl font-black tracking-tight flex justify-between items-end">
-                                                    <span>Rs {Math.abs(selectedAgentBalance).toLocaleString()}</span>
+                                                    <span>PKR {Math.abs(selectedAgentBalance).toLocaleString()}</span>
                                                     {selectedAgentBalance < 0 && (
                                                         <button type="button" onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })} className="text-[10px] uppercase font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 px-2 py-1 rounded transition-colors text-red-600 dark:text-red-400">
                                                             Settle Full
@@ -465,7 +465,7 @@ export default function AdminAgentLedger() {
                                                     className="h-7 text-[10px] font-bold px-3 rounded-full border-gold/30 hover:bg-gold/10 text-gold"
                                                     onClick={() => setForm({ ...form, amount: Math.abs(selectedAgentBalance).toString() })}
                                                 >
-                                                    Full Settlement (Rs {Math.abs(selectedAgentBalance).toLocaleString()})
+                                                    Full Settlement (PKR {Math.abs(selectedAgentBalance).toLocaleString()})
                                                 </Button>
                                             )}
                                             {selectedAgentBalance < 0 && (
@@ -486,7 +486,7 @@ export default function AdminAgentLedger() {
                                                 className="h-7 text-[10px] font-bold px-3 rounded-full border-border hover:bg-muted"
                                                 onClick={() => setForm({ ...form, amount: "10000" })}
                                             >
-                                                Rs 10k
+                                                PKR 10k
                                             </Button>
                                             <Button 
                                                 type="button" 
@@ -495,7 +495,7 @@ export default function AdminAgentLedger() {
                                                 className="h-7 text-[10px] font-bold px-3 rounded-full border-border hover:bg-muted"
                                                 onClick={() => setForm({ ...form, amount: "50000" })}
                                             >
-                                                Rs 50k
+                                                PKR 50k
                                             </Button>
                                         </div>
                                     )}
@@ -512,13 +512,13 @@ export default function AdminAgentLedger() {
                                             <div className="flex justify-between text-xs font-medium">
                                                 <span className="text-muted-foreground">Current Balance</span>
                                                 <span className={selectedAgentBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}>
-                                                    Rs {selectedAgentBalance.toLocaleString()}
+                                                    PKR {selectedAgentBalance.toLocaleString()}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between text-xs font-medium">
                                                 <span className="text-muted-foreground">Settlement ({form.direction})</span>
                                                 <span className={form.direction === 'SEND' ? 'text-red-600' : 'text-emerald-600'}>
-                                                    {form.direction === 'SEND' ? '-' : '+'} Rs {Number(form.amount).toLocaleString()}
+                                                    {form.direction === 'SEND' ? '-' : '+'} PKR {Number(form.amount).toLocaleString()}
                                                 </span>
                                             </div>
                                             <div className="h-px bg-border my-2" />
@@ -532,7 +532,7 @@ export default function AdminAgentLedger() {
                                                         return (
                                                             <>
                                                                 <div className={`text-xl font-black ${next >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                                    Rs {Math.abs(next).toLocaleString()}
+                                                                    PKR {Math.abs(next).toLocaleString()}
                                                                 </div>
                                                                 <div className="text-[9px] font-bold text-muted-foreground uppercase">
                                                                     {next >= 0 ? "Agent will owe us" : "We will owe agent"}
@@ -573,7 +573,7 @@ export default function AdminAgentLedger() {
                                                 <>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-[10px] font-black uppercase tracking-widest text-orange-600">Supplier Cost Check</span>
-                                                        <span className="text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded border border-orange-200">Rs {b.supplier_cost.toLocaleString()} Max</span>
+                                                        <span className="text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded border border-orange-200">PKR {b.supplier_cost.toLocaleString()} Max</span>
                                                     </div>
                                                     
                                                     <div className="space-y-2">
@@ -584,8 +584,8 @@ export default function AdminAgentLedger() {
                                                             />
                                                         </div>
                                                         <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-muted-foreground">
-                                                            <span>Paid: Rs {alreadySentForBooking.toLocaleString()}</span>
-                                                            <span className="text-emerald-600">Due: Rs {Math.max(0, b.supplier_cost - alreadySentForBooking).toLocaleString()}</span>
+                                                            <span>Paid: PKR {alreadySentForBooking.toLocaleString()}</span>
+                                                            <span className="text-emerald-600">Due: PKR {Math.max(0, b.supplier_cost - alreadySentForBooking).toLocaleString()}</span>
                                                         </div>
                                                     </div>
 
@@ -648,7 +648,7 @@ export default function AdminAgentLedger() {
                             {filterAgent !== 'all' && (
                                 <Button 
                                     variant="outline" 
-                                    className="h-10 rounded-xl border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10 font-bold gap-2 transition-all no-print"
+                                    className="h-10 rounded-xl border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10 font-bold gap-2 transition-all no-print shrink-0"
                                     onClick={handlePrint}
                                 >
                                     <Printer className="w-4 h-4" />
@@ -666,14 +666,25 @@ export default function AdminAgentLedger() {
                             </Select>
 
                             {filterAgent !== 'all' && (
-                                <Button 
-                                    variant="outline" 
-                                    className="h-10 gap-2 border-gold/50 text-gold hover:bg-gold/10 transition-colors"
-                                    onClick={handleViewStatement}
-                                >
-                                    <FileText className="w-4 h-4"/>
-                                    Statement
-                                </Button>
+                                <>
+                                    <Button 
+                                        variant="outline" 
+                                        className="h-10 gap-2 border-gold/50 text-gold hover:bg-gold/10 transition-colors shrink-0"
+                                        onClick={handleViewStatement}
+                                    >
+                                        <FileText className="w-4 h-4"/>
+                                        Statement
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-10 w-10 text-muted-foreground hover:text-foreground border border-border rounded-xl shrink-0 no-print"
+                                        onClick={() => setFilterAgent("all")}
+                                        title="Clear agent filter"
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                    </Button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -685,7 +696,7 @@ export default function AdminAgentLedger() {
                                 <tr>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Entry Log</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Transaction Details</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Flow</th>
+                                    <th className="hidden md:table-cell px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Flow</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Settlement Amount</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Safety</th>
                                 </tr>
@@ -743,7 +754,7 @@ export default function AdminAgentLedger() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap text-center">
+                                            <td className="hidden md:table-cell px-6 py-5 whitespace-nowrap text-center">
                                                 <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${tx.direction === 'SEND'
                                                     ? 'bg-red-500/10 text-red-500 border-red-500/20'
                                                     : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
@@ -757,7 +768,7 @@ export default function AdminAgentLedger() {
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap text-right">
                                                 <div className={`text-base font-black tracking-tight ${tx.direction === 'SEND' ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                    {tx.direction === 'SEND' ? '-' : '+'} Rs {tx.amount.toLocaleString()}
+                                                    {tx.direction === 'SEND' ? '-' : '+'} PKR {tx.amount.toLocaleString()}
                                                 </div>
                                                 {tx.is_reversal && (
                                                     <span className="text-[8px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">REVERSED ENTRY</span>
@@ -815,7 +826,7 @@ export default function AdminAgentLedger() {
                                         <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Details</th>
                                         <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Debit (SEND)</th>
                                         <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Credit (RECEIVE)</th>
-                                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right border-l border-border/50 bg-muted/20">Balance (Rs)</th>
+                                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right border-l border-border/50 bg-muted/20">Balance (PKR)</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/30 text-sm">
@@ -831,13 +842,13 @@ export default function AdminAgentLedger() {
                                                 {tx.is_reversal && <span className="text-[10px] text-red-500 font-bold">REVERSAL</span>}
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                {tx.direction === 'SEND' ? `Rs ${tx.amount.toLocaleString()}` : '-'}
+                                                {tx.direction === 'SEND' ? `PKR ${tx.amount.toLocaleString()}` : '-'}
                                             </td>
                                             <td className="px-4 py-3 text-right text-emerald-500">
-                                                {tx.direction === 'RECEIVE' ? `Rs ${tx.amount.toLocaleString()}` : '-'}
+                                                {tx.direction === 'RECEIVE' ? `PKR ${tx.amount.toLocaleString()}` : '-'}
                                             </td>
                                             <td className="px-4 py-3 text-right font-black border-l border-border/50 bg-muted/10">
-                                                {tx.balance.toLocaleString()}
+                                                PKR {tx.balance.toLocaleString()}
                                             </td>
                                         </tr>
                                     ))}
@@ -845,7 +856,7 @@ export default function AdminAgentLedger() {
                                         <tr className="bg-muted/50 border-t-2 border-border/50">
                                             <td colSpan={4} className="px-4 py-4 text-right font-black uppercase tracking-widest">Final Balance (Agent Owes / We Owe):</td>
                                             <td className="px-4 py-4 text-right font-black text-lg text-primary border-l border-border/50">
-                                                Rs {statementData[statementData.length - 1].balance.toLocaleString()}
+                                                PKR {statementData[statementData.length - 1].balance.toLocaleString()}
                                             </td>
                                         </tr>
                                     )}

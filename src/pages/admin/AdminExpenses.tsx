@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
     PlusCircle, Trash2, Loader2, Search, Filter, Receipt,
-    TrendingDown, Banknote, RefreshCcw, X, AlertCircle
+    TrendingDown, Banknote, RefreshCcw, X, AlertCircle, Edit2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -78,6 +78,13 @@ export default function AdminExpenses() {
     const [submitting, setSubmitting] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
+
+    // Edit states
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [editForm, setEditForm] = useState<OutgoingPayment | null>(null);
+    const [originalAmount, setOriginalAmount] = useState<number>(0);
+    const [showAmountConfirm, setShowAmountConfirm] = useState(false);
+    const [updatingExpense, setUpdatingExpense] = useState(false);
 
     // Filters
     const [filterCategory, setFilterCategory] = useState<Category | "">("");
@@ -285,6 +292,62 @@ export default function AdminExpenses() {
         }
     };
 
+    const handleOpenEdit = (exp: OutgoingPayment) => {
+        setEditForm({ ...exp });
+        setOriginalAmount(Number(exp.amount));
+        setShowEditForm(true);
+        setShowAmountConfirm(false);
+    };
+
+    const handleEditFieldChange = (field: string, value: any) => {
+        if (!editForm) return;
+        setEditForm(prev => prev ? { ...prev, [field]: value } : null);
+    };
+
+    const submitExpenseEdit = async () => {
+        if (!editForm) return;
+        setUpdatingExpense(true);
+        try {
+            const { error } = await supabase
+                .from("outgoing_payments")
+                .update({
+                    description: editForm.description,
+                    amount: Number(editForm.amount),
+                    paid_to: editForm.paid_to
+                })
+                .eq("id", editForm.id);
+
+            if (error) throw error;
+            toast.success("Expense updated successfully.");
+            setShowEditForm(false);
+            setShowAmountConfirm(false);
+            fetchExpenses();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to update expense.");
+        } finally {
+            setUpdatingExpense(false);
+        }
+    };
+
+    const handleSaveEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editForm) return;
+        if (!editForm.amount || isNaN(Number(editForm.amount)) || Number(editForm.amount) <= 0) {
+            toast.error("Please enter a valid amount.");
+            return;
+        }
+        if (!editForm.paid_to.trim()) {
+            toast.error("'Paid To' is required.");
+            return;
+        }
+
+        if (Number(editForm.amount) !== originalAmount) {
+            setShowAmountConfirm(true);
+        } else {
+            submitExpenseEdit();
+        }
+    };
+
     const clearFilters = () => {
         setFilterCategory("");
         setFilterSearch("");
@@ -391,21 +454,42 @@ export default function AdminExpenses() {
                         <span className="text-sm font-medium">Loading expenses...</span>
                     </div>
                 ) : expenses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-                        <Receipt className="w-10 h-10 opacity-30" />
-                        <p className="text-sm font-bold">No expenses found.</p>
-                        <p className="text-xs">Try changing filters or add a new expense.</p>
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground max-w-sm mx-auto text-center">
+                        <Receipt className="w-10 h-10 opacity-30 stroke-1 animate-pulse" />
+                        <p className="text-sm font-bold text-foreground">No expenses found.</p>
+                        <p className="text-xs mb-4">
+                            {filterCategory || filterSearch || filterDateFrom || filterDateTo
+                                ? "Adjust your filters or query to find matches."
+                                : "No expenses recorded yet. Tap below to log one."}
+                        </p>
+                        {filterCategory || filterSearch || filterDateFrom || filterDateTo ? (
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-2 bg-muted border border-border rounded-xl text-xs font-bold hover:bg-muted/80 transition-all"
+                            >
+                                Clear Filters
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleOpenForm}
+                                className="flex items-center gap-2 px-4 py-2 bg-gold text-black font-black text-xs rounded-xl hover:bg-gold/90 transition-colors shadow"
+                            >
+                                <PlusCircle className="w-4 h-4" /> Add First Expense
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-muted/50 border-b border-border">
-                                    {["Date", "Category", "Paid To", "Method", "Ref No", "Amount", "Actions"].map((h) => (
-                                        <th key={h} className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">
-                                            {h}
-                                        </th>
-                                    ))}
+                                    <th className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Date</th>
+                                    <th className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Category</th>
+                                    <th className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Paid To</th>
+                                    <th className="hidden md:table-cell px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Method</th>
+                                    <th className="hidden md:table-cell px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Ref No</th>
+                                    <th className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap text-right">Amount</th>
+                                    <th className="px-5 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -425,24 +509,33 @@ export default function AdminExpenses() {
                                                 <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">{exp.description}</p>
                                             )}
                                         </td>
-                                        <td className="px-5 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                                        <td className="hidden md:table-cell px-5 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                                             {METHOD_LABELS[exp.payment_method]}
                                         </td>
-                                        <td className="px-5 py-3 text-xs font-mono text-muted-foreground">
+                                        <td className="hidden md:table-cell px-5 py-3 text-xs font-mono text-muted-foreground">
                                             {exp.reference_no || "—"}
                                         </td>
-                                        <td className="px-5 py-3 text-sm font-black text-red-500 whitespace-nowrap">
+                                        <td className="px-5 py-3 text-sm font-black text-red-500 whitespace-nowrap text-right">
                                             Rs {Number(exp.amount).toLocaleString()}
                                         </td>
                                         <td className="px-5 py-3">
-                                            <button
-                                                id={`btn-delete-expense-${exp.id}`}
-                                                onClick={() => handleSoftDelete(exp.id)}
-                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                                                title="Delete expense"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    onClick={() => handleOpenEdit(exp)}
+                                                    className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-gold hover:bg-gold/10 transition-all"
+                                                    title="Edit expense"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    id={`btn-delete-expense-${exp.id}`}
+                                                    onClick={() => handleSoftDelete(exp.id)}
+                                                    className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-all"
+                                                    title="Delete expense"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -700,6 +793,125 @@ export default function AdminExpenses() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Expense Modal */}
+            {showEditForm && editForm && (
+                <div className="fixed inset-0 z-50 bg-foreground/50 flex items-center justify-center p-4">
+                    <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-6 border-b border-border">
+                            <h2 className="font-display font-black text-lg">Edit Expense</h2>
+                            <button onClick={() => setShowEditForm(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+                            <div>
+                                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+                                    Category
+                                </label>
+                                <input
+                                    disabled
+                                    className="w-full px-3 py-2.5 text-sm bg-muted border border-border rounded-lg text-muted-foreground cursor-not-allowed"
+                                    value={CATEGORY_LABELS[editForm.category]}
+                                />
+                                <p className="text-[10px] text-muted-foreground mt-1">Expense category cannot be altered after creation.</p>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+                                    Paid To / Supplier <span className="text-destructive">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-gold focus:outline-none"
+                                    placeholder="e.g. Air Arabia, PTCL"
+                                    value={editForm.paid_to}
+                                    onChange={(e) => handleEditFieldChange("paid_to", e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+                                    Amount (Rs) *
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    step="0.01"
+                                    className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-gold focus:outline-none"
+                                    placeholder="0.00"
+                                    value={editForm.amount}
+                                    onChange={(e) => handleEditFieldChange("amount", e.target.value)}
+                                    onWheel={(e) => e.currentTarget.blur()}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+                                    Description <span className="text-[9px] text-muted-foreground normal-case">(optional)</span>
+                                </label>
+                                <textarea
+                                    rows={3}
+                                    className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-gold focus:outline-none resize-none"
+                                    placeholder="Add notes..."
+                                    value={editForm.description || ""}
+                                    onChange={(e) => handleEditFieldChange("description", e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-3 pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={updatingExpense}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gold text-black font-black rounded-xl hover:bg-gold/90 disabled:opacity-50 transition-colors"
+                                >
+                                    {updatingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    Save Changes
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditForm(false)}
+                                    className="px-4 py-2.5 rounded-xl border border-border text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Amount Change Confirmation Modal */}
+            {showAmountConfirm && editForm && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-card rounded-2xl border border-border p-6 max-w-sm w-full text-center space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
+                        <h3 className="text-lg font-black text-foreground">Confirm Amount Change</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            You are changing this expense amount from <strong className="text-foreground">Rs {originalAmount.toLocaleString()}</strong> to <strong className="text-foreground">Rs {Number(editForm.amount).toLocaleString()}</strong>.<br/>
+                            This will adjust company treasury balances. Do you want to proceed?
+                        </p>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={submitExpenseEdit}
+                                disabled={updatingExpense}
+                                className="flex-1 py-2.5 bg-gold text-black font-bold text-xs rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+                            >
+                                {updatingExpense ? "Saving..." : "Confirm & Save"}
+                            </button>
+                            <button
+                                onClick={() => setShowAmountConfirm(false)}
+                                className="flex-1 py-2.5 border border-border text-xs font-bold text-muted-foreground rounded-xl hover:bg-muted transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

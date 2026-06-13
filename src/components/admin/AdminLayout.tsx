@@ -115,8 +115,18 @@ export default function AdminLayout() {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Monitor viewport size for desktop layout
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const listener = () => setIsDesktop(media.matches);
+    listener();
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
 
   // Auto-expand the group that contains the active route
   useEffect(() => {
@@ -229,7 +239,7 @@ export default function AdminLayout() {
             <img src="/logo-main.png" alt="Logo" className="w-full h-full object-cover mix-blend-multiply contrast-125" />
           </div>
           <div>
-            <p className="font-display text-xs font-black uppercase text-gold tracking-tight leading-tight">Akbar Pura</p>
+            <p className="font-display text-xs font-bold uppercase text-gold tracking-tight leading-tight">Akbar Pura</p>
             <p className="text-[10px] text-secondary-foreground/50 font-medium">Travels Suite</p>
           </div>
         </div>
@@ -260,6 +270,41 @@ export default function AdminLayout() {
 
             const isOpen = !collapsed[group.id];
             const hasActive = visibleItems.some((item) => item.to === location.pathname);
+
+            if (isDesktop) {
+              return (
+                <div key={group.id} className="pt-4 border-t border-sidebar-border/30 first:border-t-0 space-y-1">
+                  <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
+                    {group.label}
+                  </div>
+                  <div className="space-y-0.5">
+                    {visibleItems.map((item) => {
+                      const active = location.pathname === item.to;
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                            active
+                              ? "sidebar-link-active"
+                              : "text-secondary-foreground/65 hover:bg-sidebar-accent hover:text-secondary-foreground"
+                          }`}
+                        >
+                          <item.icon className={`w-4 h-4 shrink-0 ${active ? "text-gold" : ""}`} />
+                          <span className="flex-1 text-sm font-medium">{item.label}</span>
+                          {item.label === "Inquiries" && unreadCount > 0 && (
+                            <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full font-black">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <Collapsible key={group.id} open={isOpen} onOpenChange={() => toggleGroup(group.id)}>
@@ -292,7 +337,7 @@ export default function AdminLayout() {
                         }`}
                       >
                         <item.icon className={`w-4 h-4 shrink-0 ${active ? "text-gold" : ""}`} />
-                        <span className="flex-1">{item.label}</span>
+                        <span className="flex-1 text-sm font-medium">{item.label}</span>
                         {item.label === "Inquiries" && unreadCount > 0 && (
                           <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full font-black">
                             {unreadCount}
@@ -312,12 +357,14 @@ export default function AdminLayout() {
           <button
             onClick={() => setShowChangePassword(true)}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary-foreground/60 hover:bg-sidebar-accent hover:text-secondary-foreground transition-colors w-full"
+            aria-label="Change Password"
           >
             <Key className="w-4 h-4" /> Change Password
           </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary-foreground/60 hover:bg-sidebar-accent hover:text-red-400 transition-colors w-full"
+            aria-label="Logout"
           >
             <LogOut className="w-4 h-4" /> Logout
           </button>
@@ -335,26 +382,39 @@ export default function AdminLayout() {
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Top header */}
-        <header className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 lg:px-5 no-print shrink-0">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-foreground">
-            <Menu className="w-6 h-6" />
-          </button>
+        <header className="bg-card border-b border-border px-4 py-3 flex items-center justify-between no-print shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-foreground" aria-label="Open sidebar menu">
+              <Menu className="w-6 h-6" />
+            </button>
 
-          {/* Page title */}
-          <h1 className="font-display text-base font-bold text-foreground uppercase tracking-tight">
-            {[...NAV_GROUPS.flatMap((g) => g.items), { to: "/admin/dashboard", label: "Dashboard" }]
-              .find((l) => l.to === location.pathname)?.label || "Admin"}
-          </h1>
+            {/* Page title */}
+            <h1 className="font-display text-base font-bold text-foreground uppercase tracking-tight">
+              {[...NAV_GROUPS.flatMap((g) => g.items), { to: "/admin/dashboard", label: "Dashboard" }]
+                .find((l) => l.to === location.pathname)?.label || "Admin"}
+            </h1>
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            {/* Ctrl+K hint — placeholder for Phase 1B */}
+          {/* Desktop Search Bar mockup */}
+          <div 
+            onClick={() => setSearchOpen(true)}
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-sm text-muted-foreground hover:bg-muted/80 cursor-pointer transition-colors min-w-[300px] lg:min-w-[400px] mx-auto"
+          >
+            <Search className="w-4 h-4" />
+            <span className="flex-1 text-left">Search bookings, customers, invoices...</span>
+            <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+              <span className="text-xs">Ctrl+</span>K
+            </kbd>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Mobile Search Button */}
             <button
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-muted border border-border/60 transition-colors"
+              className="flex md:hidden items-center justify-center p-2 rounded-full bg-muted border border-border text-muted-foreground hover:bg-muted/80"
               onClick={() => setSearchOpen(true)}
+              aria-label="Open search dialog"
             >
-              <SearchIcon className="w-3.5 h-3.5" />
-              <span>Search</span>
-              <kbd className="text-[10px] bg-muted border border-border px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
+              <Search className="w-5 h-5" />
             </button>
           </div>
         </header>

@@ -85,7 +85,7 @@ export function PaymentHistoryTable({
           </h3>
           <div className="text-right">
             <p className="text-[10px] uppercase text-muted-foreground font-black tracking-widest mb-1">Current Balance Due</p>
-            <p className="text-2xl font-black text-gold">Rs {balance.toLocaleString()}</p>
+            <p className="text-2xl font-black text-gold">PKR {balance.toLocaleString()}</p>
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export function PaymentHistoryTable({
             {isEditingMargin ? (
               <div className="flex gap-2 mt-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-[10px] font-black">Rs</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-[10px] font-black">PKR</span>
                   <input
                     type="number"
                     className="w-full pl-8 pr-4 py-2 rounded-lg border border-emerald-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-emerald-700"
@@ -125,13 +125,15 @@ export function PaymentHistoryTable({
                 </button>
               </div>
             ) : (
-              <p className="text-xl font-black text-emerald-700">Rs {Number(margin || 0).toLocaleString()}</p>
+              <p className="text-xl font-black text-emerald-700">PKR {Number(margin || 0).toLocaleString()}</p>
             )}
           </div>
         )}
 
         {/* Payment Rows */}
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border" role="region" aria-label="Payment transaction history">
+          {/* sr-only caption */}
+          <p className="sr-only">List of all payment transactions for this booking, including voided entries.</p>
           {payments.length === 0 && (
             <div className="p-12 text-center text-muted-foreground italic bg-background/50">No payments recorded yet.</div>
           )}
@@ -142,7 +144,7 @@ export function PaymentHistoryTable({
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-bold text-foreground">Rs {Number(p.amount_paid).toLocaleString()}</p>
+                  <p className="font-bold text-foreground">PKR {Number(p.amount_paid).toLocaleString()}</p>
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
                     {new Date(p.payment_date).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {p.payment_method}
                   </p>
@@ -159,6 +161,7 @@ export function PaymentHistoryTable({
                 isPrivileged && (
                   <button
                     onClick={() => onOpenVoid(p.id)}
+                    aria-label={`Void payment of PKR ${Number(p.amount_paid).toLocaleString()} recorded on ${new Date(p.payment_date).toLocaleDateString()}`}
                     className="text-[10px] text-muted-foreground hover:text-destructive font-bold uppercase tracking-widest border border-border px-3 py-1 rounded-full hover:border-destructive transition-all"
                   >
                     Void
@@ -171,10 +174,11 @@ export function PaymentHistoryTable({
 
         <div className="p-6 bg-muted/10 border-t border-border flex justify-between items-center font-bold flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-sm">Total Quote: Rs {Number(totalPrice).toLocaleString()}</span>
+            <span className="text-sm">Total Quote: PKR {Number(totalPrice).toLocaleString()}</span>
             {isPrivileged && !isTerminal && onOpenEditPrice && (
               <button 
                 onClick={onOpenEditPrice}
+                aria-label="Edit total booking price"
                 className="text-[10px] text-blue-500 hover:text-blue-600 uppercase tracking-widest font-black bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded transition-colors"
                 title="Edit Total Price"
               >
@@ -182,7 +186,7 @@ export function PaymentHistoryTable({
               </button>
             )}
           </div>
-          <span className="text-sm text-green-500">Net Received: Rs {totalPaid.toLocaleString()}</span>
+          <span className="text-sm text-green-500">Net Received: PKR {totalPaid.toLocaleString()}</span>
         </div>
       </div>
 
@@ -194,23 +198,26 @@ export function PaymentHistoryTable({
           </h3>
           <form onSubmit={onSubmitPayment} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">Rs</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">PKR</span>
               <input
                 type="number"
                 placeholder="0.00"
                 required
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-bold"
+                aria-label="Payment amount in PKR"
+                className="w-full pl-14 pr-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-bold"
                 value={payAmount}
                 onChange={e => onPayAmountChange(e.target.value)}
               />
             </div>
             <input
               type="date"
+              aria-label="Payment date"
               className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold text-sm"
               value={payDate}
               onChange={e => onPayDateChange(e.target.value)}
             />
             <select
+              aria-label="Payment method"
               className="px-4 py-2.5 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-gold font-medium"
               value={payMethod}
               onChange={e => onPayMethodChange(e.target.value)}
@@ -256,7 +263,11 @@ export function PaymentHistoryTable({
                   placeholder="Describe the reason for voiding (min. 10 characters)..."
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-destructive text-sm resize-none"
                 />
-                <p className="text-[10px] text-muted-foreground mt-1">{voidReason.length}/10 minimum characters</p>
+                <p className="text-[10px] text-muted-foreground mt-1" aria-live="polite">
+                  {voidReason.trim().length >= 10
+                    ? `✓ ${voidReason.trim().length} characters — requirement met`
+                    : `${voidReason.trim().length}/10 minimum characters required`}
+                </p>
               </div>
               <div className="flex gap-3">
                 <button
