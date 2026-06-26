@@ -447,6 +447,12 @@ export default function AdminHelp() {
                         Contact Support
                     </button>
                 </div>
+                <div className="pt-4 border-t border-white/10 mt-4 flex flex-col items-center gap-1">
+                    <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">System Information</p>
+                    <p className="text-[10px] text-white/40">
+                        v1.0.0 &nbsp;|&nbsp; Lead Developer: <span className="text-gold/60">Iqra Zakir</span> &nbsp;|&nbsp; Former Developer: <span className="text-white/50">M. Asim Khan</span>
+                    </p>
+                </div>
             </div>
         </div>
     );

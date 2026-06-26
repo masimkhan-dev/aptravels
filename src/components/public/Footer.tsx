@@ -87,6 +87,9 @@ export default function Footer() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em]">
             © {new Date().getFullYear()} {agencyName} — All Rights Reserved
           </p>
+          <p className="text-[10px] text-secondary-foreground/40 tracking-wide">
+            Developed by <span className="text-gold/60 font-bold">Iqra Zakir NEXLY</span>
+          </p>
           <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest">
             <span className="hover:text-gold transition-colors cursor-pointer">Privacy Policy</span>
             <div className="w-1 h-1 rounded-full bg-gold/50" />

@@ -1,136 +1,219 @@
-# Akbar Pura Travels Suite
+﻿# Akbar Pura Travels Suite
 
-A modern, full-stack travel agency management suite designed for Akbar Pura Travels. Built with performance, security, and dynamic workflows in mind, this application provides an interactive portal for clients and a fully comprehensive admin dashboard for back-office operations.
+**A modern, full-stack travel agency management system** built for Akbar Pura International Travels & Tours — Nowshera, KPK.
+
+> Your Journey, Our Responsibility.
+
+---
+
+## Project Overview
+
+The Akbar Pura Travels Suite is a complete digital operations platform comprising:
+
+- A **public-facing portal** (landing page, services, gallery, packages, inquiry form)
+- A **secure admin dashboard** for back-office operations (bookings, customers, payments, staff, expenses)
+- A **Supabase-powered backend** (PostgreSQL database, Row Level Security, Deno Edge Functions)
+
+The system handles the full lifecycle of travel bookings — Umrah packages, airline tickets, and UAE/international visa processing — with integrated financial ledgering, agent settlement tracking, and multi-role staff access control.
+
+---
 
 ## Features
 
-- **Public Facing Portal**: Beautifully designed landing page, services overview, gallery, and dynamic travel packages.
-- **Admin Dashboard**: Dedicated portal for staff members to manage daily operations.
-- **Booking & Ledger Management**: Multi-step workflows for Umrah and Visa processing, including invoice generation, ledger tracking, and payment history.
-- **Role-Based Access Control (RBAC)**: Secure access tailored to specific roles (`admin`, `manager`, `sales`, `ops`).
-- **Staff Management Structure**: Secure edge-function driven staff onboarding avoiding raw API key distributions.
-- **Dynamic Content Management**: Easy configuration for service types, gallery image allocations, and pricing metrics.
+| Module | Description |
+|--------|-------------|
+| **Public Portal** | Landing page with hero section, services, gallery, Umrah/Hajj packages, testimonials, and inquiry form |
+| **Admin Dashboard** | KPI metrics, booking summaries, and financial overview |
+| **Booking Management** | Create and manage Ticket, Visa, and Umrah bookings with multi-step workflow tracking |
+| **Customer Directory** | Full customer profiles with CNIC/Passport, contact history, and booking ledger |
+| **Payment Ledger** | Double-entry payment recording with void/reversal support |
+| **Expense Tracker** | Outgoing payment logging linked to bookings and suppliers |
+| **Agent Ledger** | Agent balance tracking, settlement records, and printable statements |
+| **Staff Management** | Secure staff onboarding via Supabase Edge Functions with role assignment |
+| **Role-Based Access Control** | `admin`, `manager`, `sales`, `ops` roles with granular permission gates |
+| **Gallery Management** | Admin-controlled gallery with categorized image uploads |
+| **Packages & Services** | Dynamic Umrah package and service management |
+| **Site Settings** | Admin-editable contact info, agency details, and about content |
+| **Help & Guide** | Built-in system guide for all staff roles |
 
-## Tech Stack
+---
 
-**Front-End Integration:**
-- [React (v18)](https://react.dev/) - UI Library
-- [Vite](https://vitejs.dev/) - Build Tool & Development Server
-- [TypeScript](https://www.typescriptlang.org/) - Type Safety
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first styling
-- [Shadcn UI](https://ui.shadcn.com/) & Radix UI - Accessible component system
-- [Framer Motion](https://www.framer.com/motion/) - Fluid animations
+## Technology Stack
 
-**Back-End & Database:**
-- [Supabase](https://supabase.com/) - PostgreSQL Database, Authentication, and Storage
-- **Deno Edge Functions** - For secure serverless tasks (e.g., admin creation workflows).
+### Frontend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | v18.3 | UI library |
+| TypeScript | v5.8 | Type safety |
+| Vite | v5.4 | Build tool & dev server |
+| Tailwind CSS | v3.4 | Utility-first styling |
+| Shadcn UI + Radix UI | — | Accessible component system |
+| Framer Motion | v12 | Fluid animations |
+| React Router DOM | v6.30 | Client-side routing |
+| TanStack Query | v5.83 | Server state management |
+| React Hook Form + Zod | — | Form handling & validation |
+| Recharts | v2 | Dashboard analytics charts |
+| Sonner | v1.7 | Toast notifications |
+| Lucide React | v0.462 | Icon set |
+
+### Backend & Infrastructure
+
+| Technology | Purpose |
+|------------|---------|
+| Supabase | PostgreSQL database, authentication, storage, real-time |
+| Supabase Auth | Email/password authentication for admin staff |
+| Row Level Security (RLS) | Database-level access control |
+| Deno Edge Functions | Secure serverless logic (staff creation, admin bootstrapping) |
+| Vercel | Recommended deployment platform |
 
 ---
 
 ## Directory Structure
 
-```text
-akbar-pura-travels-suite-main/
-├── public/                 # Static assets (images, icons)
-├── src/                    # Main source code
-│   ├── assets/             # Global stylesheets and bundled assets
-│   ├── components/         # Reusable React components (UI, layouts, forms)
-│   ├── hooks/              # Custom React hooks (e.g., useRole)
-│   ├── integrations/       # External service utilities (Supabase clients/types)
-│   ├── lib/                # Utility functions and shared helpers (e.g., class merging)
-│   └── pages/              # Application views 
-│       ├── admin/          # Back-office screens (Dashboard, Bookings, Ledger, Staff, etc)
-│       └── Index.tsx       # Main public-facing marketing page
-├── supabase/               # Backend logic and configuration
-│   ├── functions/          # Deno-based Edge Functions
-│   │   ├── create-user/    # Secure logic for staff account deployment
-│   │   └── setup-admin/    # Bootstrapping initial super admin
-│   └── seed.sql            # Base schema structures or migrations
-├── package.json            # NPM dependencies and project scripts
-├── tailwind.config.ts      # Tailwind CSS theming and constraints
-└── vite.config.ts          # Vite build configuration
+```
+akbar-pura-travels-suite/
+├── public/                         # Static assets
+│   ├── favicon.png
+│   ├── logo-main.png
+│   ├── placeholder.svg
+│   └── robots.txt
+│
+├── src/
+│   ├── App.tsx                     # Root router and app providers
+│   ├── main.tsx                    # Application entry point
+│   ├── index.css                   # Global styles, Tailwind, CSS variables
+│   │
+│   ├── components/
+│   │   ├── admin/                  # Admin layout, protected routes, global search
+│   │   ├── public/                 # Public-facing landing page sections
+│   │   └── ui/                     # Shadcn UI primitives
+│   │
+│   ├── hooks/                      # Custom React hooks
+│   ├── integrations/supabase/      # Typed Supabase client and DB types
+│   ├── lib/                        # Constants, utilities, helpers
+│   ├── pages/                      # Application views (public + admin)
+│   └── services/                   # Service layer (Supabase API abstraction)
+│
+├── supabase/
+│   ├── functions/                  # Deno Edge Functions
+│   └── migrations/                 # PostgreSQL migration history
+│
+├── .env.example                    # Environment variable template
+├── package.json
+├── vite.config.ts
+└── vercel.json
 ```
 
 ---
 
-## API & Database Integration
-
-The application relies heavily on the Supabase ecosystem mapping directly to PostgreSQL schemas. 
-
-### Core Database Tables:
-- `user_roles`: Maps authenticated `user_id` to their functional roles (`admin`, `manager`, `sales`, `ops`). Handles systemic UI access restriction.
-- `staff_profiles`: Contains extended user metadata for staff members logging into the dashboard.
-- `bookings`: Central ledger storing flight, visa, and Umrah bookings. Tracks complex states like 'Visa Stamping Pipeline'.
-- `payments`: Relational mapping of transactions against bookings, including full voiding support and auditing records.
-- `packages` / `services` / `gallery_categories`: Content management structures feeding the dynamic front-end platform.
-
-### Edge Functions:
-
-Rather than allowing sign-ups, staff creation is tightly controlled via Deno Edge Functions avoiding JWT leakage.
-
-1. **`create-user`** (Deployed as `create-staff-user`):
-   - **Method:** `POST`
-   - **Responsibility:** Securely bypasses default Supabase rate limits/auth boundaries by using the Service Role SDK to create new Staff identities, populate their `staff_profiles` rows, and assign exact roles in `user_roles` natively in a single API round-trip.
-
-2. **`setup-admin`**:
-   - **Responsibility:** Used exclusively for establishing the primary platform Owner. Runs once to bind the root `admin` policy.
-
----
-
-## Getting Started
+## Installation
 
 ### Prerequisites
 
-You will need the following installed:
-- Node.js (v18+)
-- Supabase CLI (if developing backend edge functions locally)
+- **Node.js** v18 or higher
+- **npm** v9 or higher
+- A **Supabase** project (database + auth configured)
 
-### 1. Installation
+### 1. Install Dependencies
 
-Clone the repository and install the dependencies:
 ```bash
-# Install dependencies
 npm install
 ```
 
-### 2. Environment Variables
+### 2. Configure Environment Variables
 
-Create a `.env` file in the root directory and configure your Supabase instance:
-
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Used exclusively for Supabase CLI & Edge function Deployments
-# Do NOT prefix with VITE_
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```bash
+cp .env.example .env
 ```
 
-### 3. Running the application
+Edit `.env` with your Supabase credentials (see `.env.example` for all required variables).
 
-To start the Vite development server:
+> **Never commit your `.env` file.** It is already listed in `.gitignore`.
+
+---
+
+## Running Locally
+
 ```bash
 npm run dev
 ```
 
-### 4. Deploying Edge Functions
+The development server starts at `http://localhost:8080`.
 
-If modifying backend capabilities (like staff-management), you must deploy them via the Supabase CLI:
+---
 
-```bash
-npx supabase login
-npx supabase link --project-ref your_project_id
-npx supabase functions deploy create-staff-user --no-verify-jwt
+## Production Build
 
-# Push secrets to production edge environment
-npx supabase secrets set SUPABASE_URL=your_project_url
-npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_service_key
-```
-
-## Build for Production
-
-To create an optimized production build:
 ```bash
 npm run build
 ```
-This will compile the TypeScript, bundle assets, and output static files into the `dist/` folder ready for deployment to platforms like Vercel or Netlify.
+
+Compiled output is placed in the `dist/` folder.
+
+---
+
+## Deployment Guide
+
+### Vercel (Recommended)
+
+1. Push the repository to GitHub/GitLab.
+2. Import the project in [Vercel](https://vercel.com).
+3. Set the Framework Preset to `Vite`.
+4. Add environment variables in the Vercel dashboard.
+5. Deploy. The `vercel.json` is pre-configured for SPA routing.
+
+### Netlify
+
+1. Connect your Git repository in Netlify.
+2. Build command: `npm run build` | Publish directory: `dist`.
+3. Add environment variables in site settings.
+
+---
+
+## Deploying Supabase Edge Functions
+
+```bash
+npx supabase login
+npx supabase link --project-ref your-project-id
+npx supabase functions deploy create-staff-user --no-verify-jwt
+npx supabase secrets set SUPABASE_URL=https://your-project-id.supabase.co
+npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+---
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `VITE_SUPABASE_URL` | Supabase project REST API URL | Yes |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/public key | Yes |
+| `VITE_SUPABASE_PROJECT_ID` | Supabase project reference ID | Optional |
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Blank page after deploy | Ensure `vercel.json` is present for SPA routing |
+| Auth not working | Verify Supabase URL and anon key are correct |
+| Staff cannot log in | Check `user_roles` table and Supabase Email Auth settings |
+| Edge functions failing | Redeploy with Supabase CLI and verify secrets |
+| 404 on page refresh | Add a catch-all redirect to `index.html` on your host |
+
+---
+
+## Development Team
+
+| Role | Name |
+|------|------|
+| **Lead Developer** | Iqra Zakir |
+| **Former Developer** | M. Asim Khan |
+
+---
+
+## License
+
+MIT License — © 2026 Akbar Pura International Travels & Tours. All rights reserved.

@@ -1,7 +1,19 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "akbar-pura-travels-suite",
+  "description": "Full-stack travel agency management suite for Akbar Pura International Travels & Tours — admin dashboard, booking ledger, Umrah/Visa/Ticket workflows, and public-facing portal.",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Iqra Zakir",
+    "role": "Lead Developer"
+  },
+  "contributors": [
+    {
+      "name": "M. Asim Khan",
+      "role": "Former Developer"
+    }
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
